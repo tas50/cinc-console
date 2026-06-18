@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# cinc-console
 
-## Getting Started
+A web console for a [Cinc](https://cinc.sh/) / Chef Infra Server. Browse and
+edit the objects in your organizations — nodes, roles, environments, data bags,
+members — from the browser, with the server enforcing each user's real
+permissions.
 
-First, run the development server:
+## How it works
+
+cinc-console uses the classic **webui-key impersonation** model. The console
+holds the server's `webui_priv.pem`. Users log in with their server username and
+password; every request the console then makes to the cinc server is signed with
+the webui key while carrying the logged-in user's identity
+(`X-Ops-Userid` + `X-Ops-Request-Source: web`). The server applies that user's
+ACLs, so the console never decides permissions — a `403` from the server is what
+gates editing in the UI, exactly as it would for `knife`.
+
+- **Single Next.js app.** The webui key and all request signing run server-side
+  only; the browser never sees the key or talks to the cinc server directly.
+- **Stateless sessions.** The session is an encrypted cookie holding only the
+  username, so the console scales to N replicas with no Redis or database.
+- **v1.3 signing.** The signing module is a faithful port of the Go
+  [`cinc-api`](https://github.com/tas50/cinc-api) implementation, pinned by a
+  byte-for-byte conformance test.
+
+## Object scope
+
+| Objects | Capability |
+| --- | --- |
+| Nodes, Roles, Environments, Data bags (+ items), Members & groups | View + create / edit / delete (ACL-gated) |
+| Cookbooks, Policies, Clients | Read-only |
+
+Cookbook uploads and policy/client writes are out of scope for this version.
+
+## Configuration
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `CINC_SERVER_URL` | yes | Base URL of the Cinc/Chef server, e.g. `https://chef.example.com` |
+| `CINC_WEBUI_KEY` | yes | Contents of `webui_priv.pem` (PEM) |
+| `SESSION_SECRET` | yes | 32+ char secret used to encrypt the session cookie |
+| `CINC_CA_CERT` | no | CA bundle (PEM) to trust a self-signed server |
+| `CINC_SSL_NO_VERIFY` | no | `true` to skip TLS verification (dev only) |
+| `SESSION_TTL_SECONDS` | no | Session lifetime, default `28800` (8h) |
+
+The app validates these at boot and exits with a clear message if a required
+value is missing.
+
+## Deploy to Kubernetes
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+helm install cinc-console ./deploy/helm/cinc-console \
+  --set cincServerUrl=https://chef.example.com \
+  --set-file webuiKey=/etc/opscode/webui_priv.pem
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`SESSION_SECRET` is generated automatically and preserved across upgrades. See
+`deploy/helm/cinc-console/values.yaml` for all options (ingress, resources,
+`existingSecret`, etc.) and `values-example.yaml` for a minimal config.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm install
+cp .env.example .env.local   # fill in the variables above
+pnpm dev                     # http://localhost:3000
+pnpm test                    # unit tests (vitest)
+pnpm build                   # production build
+```
 
-## Learn More
+## Security
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The webui key is a powerful credential — it can act as any user. Keep it in a
+  Kubernetes Secret (or `existingSecret`), never in the image or client bundle.
+- Serve the console over TLS; the session cookie is `HttpOnly` + `Secure` in
+  production.
+- Authorization is always the cinc server's. The console pre-disables some
+  controls as a convenience but never substitutes its own permission decisions.
