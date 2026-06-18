@@ -2,13 +2,17 @@
 
 FROM node:26-alpine AS deps
 WORKDIR /app
-RUN corepack enable
+# Node 25+ no longer bundles Corepack, so install it before enabling. Corepack
+# then uses the pnpm version pinned by package.json's "packageManager" field.
+RUN npm install -g corepack@latest && corepack enable
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 FROM node:26-alpine AS build
 WORKDIR /app
-RUN corepack enable
+# Node 25+ no longer bundles Corepack, so install it before enabling. Corepack
+# then uses the pnpm version pinned by package.json's "packageManager" field.
+RUN npm install -g corepack@latest && corepack enable
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
