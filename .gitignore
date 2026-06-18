@@ -23,6 +23,8 @@
 # misc
 .DS_Store
 *.pem
+# ...except the public signing-conformance test vector (from cinc-api/testdata).
+!lib/cinc/__fixtures__/test_key.pem
 
 # debug
 npm-debug.log*
