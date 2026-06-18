@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
-/* Dark operator-console theme. Orange accent carries weight; it is reserved
-   for primary actions and active/selected state. Light theme is a later flip
-   of the same tokens. */
+/* Dark operator-console theme. The Cinc violet accent carries weight; it is
+   reserved for primary actions and active/selected state. Light theme is a
+   later flip of the same tokens. */
 :root {
-  --bg: #15171a;
-  --surface: #1e2125;
-  --surface-2: #24282d;
-  --border: #2c3036;
-  --primary: #f2811d;
-  --primary-hover: #ff9433;
-  --primary-foreground: #15171a;
-  --muted: #7e8e8e;
-  --text: #e8eaed;
+  --bg: #131318;
+  --surface: #1c1b22;
+  --surface-2: #232230;
+  --border: #2d2b3a;
+  --primary: #7c27ff;
+  --primary-hover: #9357ff;
+  --primary-foreground: #ffffff;
+  --muted: #8b8a9e;
+  --text: #e9e8ef;
   --success: #3fb950;
   --warn: #d29922;
   --danger: #f85149;

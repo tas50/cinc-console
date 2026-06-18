@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -37,8 +38,11 @@ export function AppShell({
     <div className="flex min-h-screen flex-col">
       <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3">
         <div className="flex items-center gap-4">
-          <Link href="/orgs" className="text-lg font-semibold tracking-tight">
-            <span className="text-primary">cinc</span>{" "}
+          <Link
+            href="/orgs"
+            className="flex items-center gap-2 text-lg font-semibold tracking-tight"
+          >
+            <Image src="/cinc/logo-icon.png" alt="Cinc" width={22} height={22} />
             <span className="text-text">console</span>
           </Link>
           <OrgSwitcher orgs={orgs} />
