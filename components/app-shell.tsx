@@ -47,6 +47,7 @@ export function AppShell({
               alt="Cinc"
               width={22}
               height={22}
+              priority
               unoptimized
             />
             <span className="text-text">console</span>
