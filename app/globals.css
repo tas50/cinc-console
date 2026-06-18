@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+/* Dark operator-console theme. The Cinc violet accent carries weight; it is
+   reserved for primary actions and active/selected state. Light theme is a
+   later flip of the same tokens. */
+:root {
+  --bg: #131318;
+  --surface: #1c1b22;
+  --surface-2: #232230;
+  --border: #2d2b3a;
+  --primary: #7c27ff;
+  --primary-hover: #9357ff;
+  --primary-foreground: #ffffff;
+  /* The lighter of the logo's two purples — readable for text/links on dark. */
+  --link: #8040ff;
+  --muted: #8b8a9e;
+  --text: #e9e8ef;
+  --success: #3fb950;
+  --warn: #d29922;
+  --danger: #f85149;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-link: var(--link);
+  --color-muted: var(--muted);
+  --color-text: var(--text);
+  --color-success: var(--success);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+a {
+  color: var(--link);
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}

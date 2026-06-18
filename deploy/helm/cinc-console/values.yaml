@@ -1,0 +1,54 @@
+# Default values for cinc-console.
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/tas50/cinc-console
+  tag: "" # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# -- Connection to the Cinc/Chef Infra Server.
+cincServerUrl: "" # e.g. https://chef.example.com  (REQUIRED)
+# Skip TLS verification of the cinc server (dev only).
+sslNoVerify: false
+# Session cookie lifetime in seconds (default 8h).
+sessionTtlSeconds: 28800
+
+# -- Secrets. Provide the webui key here, or point existingSecret at a
+# pre-created Secret that holds CINC_WEBUI_KEY, SESSION_SECRET, and
+# optionally CINC_CA_CERT.
+webuiKey: "" # contents of webui_priv.pem (REQUIRED unless existingSecret set)
+# A PEM CA bundle to trust for a self-signed cinc server (optional).
+caCert: ""
+# 32+ char secret used to encrypt the session cookie. Generated if empty.
+sessionSecret: ""
+# Use an externally-managed Secret instead of the values above.
+existingSecret: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  host: cinc-console.example.com
+  tls: [] # e.g. [{ secretName: cinc-console-tls, hosts: [cinc-console.example.com] }]
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
