@@ -23,10 +23,10 @@ export function buildSessionOptions(): SessionOptions {
   };
 }
 
-export const sessionOptions = buildSessionOptions();
-
 export async function getSession(): Promise<IronSession<SessionData>> {
-  return getIronSession<SessionData>(await cookies(), sessionOptions);
+  // Built lazily (not at module load) so `next build` doesn't require runtime
+  // config to be present when route modules are imported.
+  return getIronSession<SessionData>(await cookies(), buildSessionOptions());
 }
 
 export class Unauthorized extends Error {
