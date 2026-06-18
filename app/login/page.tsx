@@ -8,9 +8,7 @@ export default function LoginPage() {
           <h1 className="text-2xl font-semibold tracking-tight">
             <span className="text-primary">cinc</span> console
           </h1>
-          <p className="mt-1 text-sm text-muted">
-            Sign in to your Cinc/Chef server
-          </p>
+          <p className="mt-1 text-sm text-muted">Sign in to your Cinc server</p>
         </div>
         <LoginForm />
       </div>

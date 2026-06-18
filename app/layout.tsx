@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "cinc console",
-  description: "Web console for a Cinc/Chef Infra Server",
+  description: "Web console for a Cinc Infra Server",
 };
 
 export default function RootLayout({
