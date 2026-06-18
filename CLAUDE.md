@@ -98,15 +98,18 @@ Required env (validated at boot, fail-fast): `CINC_SERVER_URL`,
 `cinc-zero` (../cinc-zero) speaks the Cinc API and supports webui impersonation
 as of **v0.7.0** — earlier versions verify each request against the
 `X-Ops-UserId` user's own key and return 401 for the console's signed-as-webui
-requests.
+requests. **v0.8.0+** seeds a ready login (`anna` / `anna123`) in `dev/test-repo`.
 
 ```bash
-cinc-zero --addr 127.0.0.1:8890 --key-out /tmp/webui.pem   # admin key doubles as the webui key
+cinc-zero --state dev/test-repo --key-out /tmp/webui.pem   # admin key doubles as the webui key
 ```
 
 Point the console at it: `CINC_SERVER_URL=http://127.0.0.1:8890`,
-`CINC_WEBUI_KEY=$(cat /tmp/webui.pem)`. Login requires a user **with a password**
-— create one as the admin (`POST /users {"name":"…","password":"…"}` signed via
-the webui key) since cinc-zero stores passwords out-of-band for `authenticate_user`.
+`CINC_WEBUI_KEY=$(cat /tmp/webui.pem)`, then log in as **anna / anna123**.
+
+Login requires a user **with a password** (cinc-zero stores passwords out-of-band
+for `authenticate_user`). To mint another, run `node scripts/seed-user.mjs
+<name> <password>` with the same `CINC_SERVER_URL`/`CINC_WEBUI_KEY` env, or
+`POST /users {"name":"…","password":"…"}` signed via the webui key.
 
 Design spec and implementation plan live in `docs/superpowers/`.
