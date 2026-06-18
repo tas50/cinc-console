@@ -1,10 +1,14 @@
+import { readFileSync } from "node:fs";
 import { z } from "zod";
 
 const schema = z.object({
   CINC_SERVER_URL: z.string().url(),
-  CINC_WEBUI_KEY: z.string().min(1),
+  // Provide the webui key inline OR via a file path (CINC_WEBUI_KEY_FILE).
+  CINC_WEBUI_KEY: z.string().min(1).optional(),
+  CINC_WEBUI_KEY_FILE: z.string().optional(),
   SESSION_SECRET: z.string().min(32, "must be >= 32 chars"),
   CINC_CA_CERT: z.string().optional(),
+  CINC_CA_CERT_FILE: z.string().optional(),
   CINC_SSL_NO_VERIFY: z.enum(["true", "false"]).optional(),
   SESSION_TTL_SECONDS: z.coerce.number().optional(),
   CHEF_VERSION: z.string().optional(),
@@ -20,21 +24,46 @@ export type Config = {
   chefVersion: string;
 };
 
+function readPem(path: string, label: string): string {
+  try {
+    return readFileSync(path, "utf8");
+  } catch (e) {
+    throw new Error(
+      `Invalid cinc-console configuration — ${label} could not read ${path}: ${(e as Error).message}`,
+    );
+  }
+}
+
 /** Parse and validate the runtime configuration, failing fast and loud. */
 export function loadConfig(env: Record<string, string | undefined>): Config {
   const r = schema.safeParse(env);
-  if (!r.success) {
-    const missing = r.error.issues
-      .map((i) => `${i.path.join(".")}: ${i.message}`)
-      .join("; ");
-    throw new Error(`Invalid cinc-console configuration — ${missing}`);
+  const issues = r.success
+    ? []
+    : r.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+
+  // The webui key may be inline (CINC_WEBUI_KEY) or a file (CINC_WEBUI_KEY_FILE).
+  let webuiKey = env.CINC_WEBUI_KEY;
+  if (!webuiKey && env.CINC_WEBUI_KEY_FILE) {
+    webuiKey = readPem(env.CINC_WEBUI_KEY_FILE, "CINC_WEBUI_KEY_FILE");
+  }
+  if (!webuiKey) {
+    issues.push("CINC_WEBUI_KEY: set CINC_WEBUI_KEY or CINC_WEBUI_KEY_FILE");
+  }
+
+  let caCert = env.CINC_CA_CERT;
+  if (!caCert && env.CINC_CA_CERT_FILE) {
+    caCert = readPem(env.CINC_CA_CERT_FILE, "CINC_CA_CERT_FILE");
+  }
+
+  if (!r.success || issues.length) {
+    throw new Error(`Invalid cinc-console configuration — ${issues.join("; ")}`);
   }
   const e = r.data;
   return {
     serverUrl: e.CINC_SERVER_URL.replace(/\/$/, ""),
-    webuiKey: e.CINC_WEBUI_KEY,
+    webuiKey: webuiKey!,
     sessionSecret: e.SESSION_SECRET,
-    caCert: e.CINC_CA_CERT,
+    caCert,
     sslNoVerify: e.CINC_SSL_NO_VERIFY === "true",
     sessionTtlSeconds: e.SESSION_TTL_SECONDS ?? 28800,
     chefVersion: e.CHEF_VERSION ?? "16.0.0",
