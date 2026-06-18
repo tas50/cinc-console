@@ -17,6 +17,10 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Run on everything except API routes, Next internals, and static assets.
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  // Run on everything except API routes, Next internals, and static assets
+  // (including public images like the login logo, which must load while
+  // unauthenticated).
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpe?g|gif|svg|ico|webp)).*)",
+  ],
 };

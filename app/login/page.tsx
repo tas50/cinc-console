@@ -13,6 +13,7 @@ export default function LoginPage() {
               width={84}
               height={94}
               priority
+              unoptimized
             />
           </div>
           <h1 className="text-lg font-medium tracking-tight text-text">console</h1>

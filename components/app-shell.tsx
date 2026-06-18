@@ -42,7 +42,13 @@ export function AppShell({
             href="/orgs"
             className="flex items-center gap-2 text-lg font-semibold tracking-tight"
           >
-            <Image src="/cinc/logo-icon.png" alt="Cinc" width={22} height={22} />
+            <Image
+              src="/cinc/logo-icon.png"
+              alt="Cinc"
+              width={22}
+              height={22}
+              unoptimized
+            />
             <span className="text-text">console</span>
           </Link>
           <OrgSwitcher orgs={orgs} />
