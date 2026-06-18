@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
@@ -14,7 +15,13 @@ export function UserMenu({ user }: { user: string }) {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm text-muted">{user}</span>
+      <Link
+        href="/profile"
+        title="Your profile"
+        className="text-sm text-muted hover:text-link"
+      >
+        {user}
+      </Link>
       <Button variant="ghost" onClick={logout} className="text-sm">
         Sign out
       </Button>

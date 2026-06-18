@@ -70,7 +70,7 @@ export function AppShell({
                     className={cn(
                       "block rounded-md px-3 py-2 text-sm transition-colors",
                       active
-                        ? "bg-surface-2 text-primary font-medium"
+                        ? "bg-surface-2 text-link font-medium"
                         : "text-muted hover:bg-surface-2 hover:text-text",
                     )}
                   >

@@ -11,6 +11,8 @@
   --primary: #7c27ff;
   --primary-hover: #9357ff;
   --primary-foreground: #ffffff;
+  /* The lighter of the logo's two purples — readable for text/links on dark. */
+  --link: #8040ff;
   --muted: #8b8a9e;
   --text: #e9e8ef;
   --success: #3fb950;
@@ -26,6 +28,7 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
+  --color-link: var(--link);
   --color-muted: var(--muted);
   --color-text: var(--text);
   --color-success: var(--success);
@@ -46,7 +49,7 @@ body {
 }
 
 a {
-  color: var(--primary);
+  color: var(--link);
 }
 
 ::selection {
