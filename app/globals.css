@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+/* Dark operator-console theme. Orange accent carries weight; it is reserved
+   for primary actions and active/selected state. Light theme is a later flip
+   of the same tokens. */
+:root {
+  --bg: #15171a;
+  --surface: #1e2125;
+  --surface-2: #24282d;
+  --border: #2c3036;
+  --primary: #f2811d;
+  --primary-hover: #ff9433;
+  --primary-foreground: #15171a;
+  --muted: #7e8e8e;
+  --text: #e8eaed;
+  --success: #3fb950;
+  --warn: #d29922;
+  --danger: #f85149;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-text: var(--text);
+  --color-success: var(--success);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+a {
+  color: var(--primary);
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
