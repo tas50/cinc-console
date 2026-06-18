@@ -1,0 +1,23 @@
+cinc-console {{ .Chart.AppVersion }} is deploying.
+
+Server: {{ .Values.cincServerUrl }}
+
+{{- if .Values.ingress.enabled }}
+URL: http{{ if .Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.host }}
+{{- else }}
+The Service is {{ .Values.service.type }} on port {{ .Values.service.port }}.
+Port-forward to try it:
+
+  kubectl port-forward svc/{{ include "cinc-console.fullname" . }} 8080:{{ .Values.service.port }}
+  open http://localhost:8080
+{{- end }}
+
+Log in with a Cinc/Chef server username and password. The console signs
+requests on each user's behalf with the webui key, so each user sees and edits
+only what their server ACLs allow.
+
+{{- if and (not .Values.existingSecret) (not .Values.webuiKey) }}
+
+WARNING: no webuiKey was provided. Set webuiKey (the contents of
+webui_priv.pem) or point existingSecret at a Secret that contains it.
+{{- end }}

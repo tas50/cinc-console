@@ -1,0 +1,23 @@
+# Minimal working configuration.
+#   helm install cinc-console ./deploy/helm/cinc-console \
+#     -f values-example.yaml \
+#     --set-file webuiKey=/etc/opscode/webui_priv.pem
+
+cincServerUrl: https://chef.example.com
+
+# Provide the webui private key (here via --set-file, shown inline for clarity):
+# webuiKey: |
+#   -----BEGIN RSA PRIVATE KEY-----
+#   ...
+#   -----END RSA PRIVATE KEY-----
+
+# sessionSecret is auto-generated when empty.
+
+ingress:
+  enabled: true
+  className: nginx
+  host: cinc-console.example.com
+  tls:
+    - secretName: cinc-console-tls
+      hosts:
+        - cinc-console.example.com
