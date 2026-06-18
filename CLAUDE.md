@@ -95,7 +95,10 @@ Required env (validated at boot, fail-fast): `CINC_SERVER_URL`,
 
 ## Local testing against cinc-zero
 
-`cinc-zero` (../cinc-zero) speaks the Cinc API and supports webui impersonation.
+`cinc-zero` (../cinc-zero) speaks the Cinc API and supports webui impersonation
+as of **v0.7.0** — earlier versions verify each request against the
+`X-Ops-UserId` user's own key and return 401 for the console's signed-as-webui
+requests.
 
 ```bash
 cinc-zero --addr 127.0.0.1:8890 --key-out /tmp/webui.pem   # admin key doubles as the webui key
