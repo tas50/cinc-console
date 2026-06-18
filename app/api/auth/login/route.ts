@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "missing credentials" }, { status: 400 });
   }
 
-  const ok = await authenticateUser(username, password);
-  if (!ok) {
+  const authUser = await authenticateUser(username, password);
+  if (!authUser) {
     return NextResponse.json(
       { error: "invalid username or password" },
       { status: 401 },
@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
 
   const session = await getSession();
   session.username = username;
+  session.displayName = authUser.display_name || username;
   session.loginAt = Date.now();
   await session.save();
   return NextResponse.json({ ok: true });

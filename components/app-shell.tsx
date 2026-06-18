@@ -23,12 +23,12 @@ const NAV: { label: string; slug: string }[] = [
 export function AppShell({
   org,
   orgs,
-  user,
+  displayName,
   children,
 }: {
   org: string;
   orgs: Org[];
-  user: string;
+  displayName: string;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -54,7 +54,7 @@ export function AppShell({
           </Link>
           <OrgSwitcher orgs={orgs} />
         </div>
-        <UserMenu user={user} />
+        <UserMenu name={displayName} />
       </header>
 
       <div className="flex flex-1">

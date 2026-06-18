@@ -15,23 +15,24 @@ function explain(error: string): string {
 }
 
 /**
- * Create form: a name field plus a JSON body. `onCreate` is a server action.
- * `template` seeds the editor; `{name}` in it is replaced as the user types.
+ * Create form: a name field plus a JSON body. `onCreate` is a server action,
+ * which injects the name/id into the created object server-side, so the body
+ * is just the skeleton. `initialJson` seeds the editor.
  */
 export function NewObjectForm({
   title,
   onCreate,
   backHref,
-  template,
+  initialJson,
 }: {
   title: string;
   onCreate: (name: string, json: string) => Promise<ActionResult>;
   backHref: string;
-  template: (name: string) => string;
+  initialJson: string;
 }) {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [json, setJson] = useState(template(""));
+  const [json, setJson] = useState(initialJson);
   const [valid, setValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -63,11 +64,7 @@ export function NewObjectForm({
         <Input
           id="name"
           value={name}
-          onChange={(e) => {
-            const v = e.target.value;
-            setName(v);
-            setJson(template(v));
-          }}
+          onChange={(e) => setName(e.target.value)}
           className="max-w-xs"
           autoFocus
         />

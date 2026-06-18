@@ -1,6 +1,6 @@
 "use server";
 
-import { requireUser } from "@/lib/session";
+import { getSession, requireUser } from "@/lib/session";
 import { getUser, putUser } from "@/lib/cinc/users";
 import { runAction, type ActionResult } from "@/lib/cinc/action";
 
@@ -17,7 +17,14 @@ export async function saveProfile(
 ): Promise<ActionResult> {
   const user = await requireUser();
   const current = await getUser(user);
-  return runAction(() => putUser(user, { ...current, ...details }));
+  const result = await runAction(() => putUser(user, { ...current, ...details }));
+  // Keep the header's display name in sync after a successful change.
+  if ("ok" in result && details.display_name !== undefined) {
+    const session = await getSession();
+    session.displayName = details.display_name || user;
+    await session.save();
+  }
+  return result;
 }
 
 /** Change the logged-in user's web-login password. */

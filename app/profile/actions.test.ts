@@ -2,7 +2,13 @@
 import { expect, test, vi, beforeEach } from "vitest";
 import { CincError } from "@/lib/cinc/errors";
 
-vi.mock("@/lib/session", () => ({ requireUser: async () => "anna" }));
+const { session } = vi.hoisted(() => ({
+  session: { displayName: "", save: vi.fn() },
+}));
+vi.mock("@/lib/session", () => ({
+  requireUser: async () => "anna",
+  getSession: async () => session,
+}));
 
 const { getUser, putUser } = vi.hoisted(() => ({
   getUser: vi.fn(),
@@ -15,6 +21,8 @@ import { saveProfile, changePassword } from "./actions";
 beforeEach(() => {
   getUser.mockReset();
   putUser.mockReset();
+  session.save.mockReset();
+  session.displayName = "";
   getUser.mockResolvedValue({ username: "anna", email: "old@x", public_key: "K" });
 });
 
@@ -51,4 +59,11 @@ test("saveProfile maps a 403 to forbidden", async () => {
   await expect(saveProfile({ email: "x@y" })).resolves.toEqual({
     error: "forbidden",
   });
+});
+
+test("saveProfile syncs the session display name when it changes", async () => {
+  putUser.mockResolvedValueOnce({});
+  await saveProfile({ display_name: "Anna B" });
+  expect(session.displayName).toBe("Anna B");
+  expect(session.save).toHaveBeenCalled();
 });

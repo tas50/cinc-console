@@ -5,6 +5,7 @@ import { getConfig } from "./config";
 
 export type SessionData = {
   username?: string;
+  displayName?: string;
   loginAt?: number;
 };
 

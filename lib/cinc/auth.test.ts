@@ -7,9 +7,12 @@ vi.mock("./client", () => ({ cincRequest: (...a: unknown[]) => req(...a) }));
 
 import { authenticateUser } from "./auth";
 
-test("returns true on success and signs as the user", async () => {
-  req.mockResolvedValueOnce({ name: "alice" });
-  await expect(authenticateUser("alice", "pw")).resolves.toBe(true);
+test("returns the user (with display_name) on success", async () => {
+  req.mockResolvedValueOnce({ user: { username: "alice", display_name: "Alice A" } });
+  await expect(authenticateUser("alice", "pw")).resolves.toEqual({
+    username: "alice",
+    display_name: "Alice A",
+  });
   expect(req).toHaveBeenCalledWith(
     expect.objectContaining({
       method: "POST",
@@ -19,9 +22,16 @@ test("returns true on success and signs as the user", async () => {
   );
 });
 
-test("returns false on 401", async () => {
+test("falls back to the username when the response has no user", async () => {
+  req.mockResolvedValueOnce({ status: "linked" });
+  await expect(authenticateUser("alice", "pw")).resolves.toEqual({
+    username: "alice",
+  });
+});
+
+test("returns null on 401", async () => {
   req.mockRejectedValueOnce(new CincError(401, "bad"));
-  await expect(authenticateUser("alice", "bad")).resolves.toBe(false);
+  await expect(authenticateUser("alice", "bad")).resolves.toBeNull();
 });
 
 test("rethrows non-401 errors", async () => {

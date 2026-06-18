@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-export function UserMenu({ user }: { user: string }) {
+export function UserMenu({ name }: { name: string }) {
   const router = useRouter();
 
   async function logout() {
@@ -20,7 +20,7 @@ export function UserMenu({ user }: { user: string }) {
         title="Your profile"
         className="text-sm text-muted hover:text-link"
       >
-        {user}
+        {name}
       </Link>
       <Button variant="ghost" onClick={logout} className="text-sm">
         Sign out

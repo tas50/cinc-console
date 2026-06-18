@@ -7,7 +7,7 @@ const SECTIONS = [
   { label: "Environments", slug: "environments", note: "Cookbook constraints" },
   { label: "Data Bags", slug: "data_bags", note: "Shared data items" },
   { label: "Members", slug: "members", note: "Users and groups" },
-  { label: "Cookbooks", slug: "cookbooks", note: "Read-only" },
+  { label: "Cookbooks", slug: "cookbooks", note: "Browse cookbooks" },
 ];
 
 export default async function OrgDashboard({

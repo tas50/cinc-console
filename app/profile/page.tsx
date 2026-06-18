@@ -1,14 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
-import { currentUser } from "@/lib/guard";
+import { currentSession } from "@/lib/guard";
 import { getUser } from "@/lib/cinc/users";
 import { safeGet, explainRead } from "@/lib/cinc/safe-get";
 import { UserMenu } from "@/components/user-menu";
 import { ProfileForm } from "./profile-form";
 
 export default async function ProfilePage() {
-  const user = await currentUser();
-  const res = await safeGet(() => getUser(user));
+  const { username, displayName } = await currentSession();
+  const res = await safeGet(() => getUser(username));
 
   return (
     <main className="min-h-screen">
@@ -27,14 +27,14 @@ export default async function ProfilePage() {
           />
           <span className="text-text">console</span>
         </Link>
-        <UserMenu user={user} />
+        <UserMenu name={displayName} />
       </header>
 
       <div className="mx-auto max-w-xl p-6">
         <h1 className="mb-1 text-xl font-semibold tracking-tight">
           Your profile
         </h1>
-        <p className="mb-6 font-mono text-sm text-muted">{user}</p>
+        <p className="mb-6 font-mono text-sm text-muted">{username}</p>
         {"error" in res ? (
           <p className="text-sm text-danger">{explainRead(res.error)}</p>
         ) : (

@@ -1,13 +1,19 @@
 import Link from "next/link";
 import Image from "next/image";
-import { currentUser } from "@/lib/guard";
+import { redirect } from "next/navigation";
+import { currentSession } from "@/lib/guard";
 import { listUserOrgs } from "@/lib/cinc/orgs";
 import { Card } from "@/components/ui/card";
 import { UserMenu } from "@/components/user-menu";
 
 export default async function OrgsPage() {
-  const user = await currentUser();
-  const orgs = await listUserOrgs(user);
+  const { username, displayName } = await currentSession();
+  const orgs = await listUserOrgs(username);
+
+  // With a single org there's nothing to pick — go straight in.
+  if (orgs.length === 1) {
+    redirect(`/orgs/${orgs[0].name}`);
+  }
 
   return (
     <main className="min-h-screen">
@@ -23,7 +29,7 @@ export default async function OrgsPage() {
           />
           <span className="text-text">console</span>
         </div>
-        <UserMenu user={user} />
+        <UserMenu name={displayName} />
       </header>
 
       <div className="mx-auto max-w-3xl p-6">
