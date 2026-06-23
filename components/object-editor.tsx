@@ -20,6 +20,7 @@ function explain(error: string): string {
  */
 export function ObjectEditor({
   name,
+  titleIcon,
   initialJson,
   details,
   onSave,
@@ -28,6 +29,8 @@ export function ObjectEditor({
   readOnly = false,
 }: {
   name: string;
+  /** Optional glyph shown to the left of the name (e.g. a node's platform). */
+  titleIcon?: ReactNode;
   initialJson: string;
   /**
    * Curated human-readable view. When provided it is shown by default and the
@@ -89,7 +92,10 @@ export function ObjectEditor({
           <Link href={backHref} className="text-sm text-muted hover:text-text">
             ← back
           </Link>
-          <h1 className="font-mono text-xl font-semibold">{name}</h1>
+          <div className="flex items-center gap-2">
+            {titleIcon}
+            <h1 className="font-mono text-xl font-semibold">{name}</h1>
+          </div>
         </div>
         <div className="flex gap-2">
           {details && (
