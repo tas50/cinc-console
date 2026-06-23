@@ -2,6 +2,7 @@ import { currentUser } from "@/lib/guard";
 import { policies } from "@/lib/cinc/readonly";
 import { safeGet, explainRead } from "@/lib/cinc/safe-get";
 import { ObjectEditor } from "@/components/object-editor";
+import { PolicyDetails } from "@/components/details/policy-details";
 
 export default async function PolicyDetail({
   params,
@@ -19,6 +20,7 @@ export default async function PolicyDetail({
     <ObjectEditor
       name={name}
       initialJson={JSON.stringify(res.data, null, 2)}
+      details={<PolicyDetails data={res.data} />}
       backHref={`/orgs/${org}/policies`}
       readOnly={true}
     />

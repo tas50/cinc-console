@@ -2,6 +2,7 @@ import { currentUser } from "@/lib/guard";
 import { dataBags } from "@/lib/cinc/databags";
 import { safeGet, explainRead } from "@/lib/cinc/safe-get";
 import { ObjectEditor } from "@/components/object-editor";
+import { DataBagItemDetails } from "@/components/details/data-bag-item-details";
 import { saveItem, deleteItem } from "../../actions";
 
 export default async function DataBagItemDetail({
@@ -22,6 +23,7 @@ export default async function DataBagItemDetail({
     <ObjectEditor
       name={id}
       initialJson={JSON.stringify(res.data, null, 2)}
+      details={<DataBagItemDetails data={res.data} />}
       backHref={base}
       onSave={saveItem.bind(null, org, bag, id)}
       onDelete={deleteItem.bind(null, org, bag, id)}

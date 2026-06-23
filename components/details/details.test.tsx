@@ -1,0 +1,97 @@
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { NodeDetails } from "./node-details";
+import { RoleDetails } from "./role-details";
+import { EnvironmentDetails } from "./environment-details";
+import { GroupDetails } from "./group-details";
+import { ClientDetails } from "./client-details";
+import { DataBagItemDetails } from "./data-bag-item-details";
+import { AttributeTree } from "./attribute-tree";
+
+describe("NodeDetails", () => {
+  const node = {
+    chef_environment: "production",
+    run_list: ["recipe[apache2::default]", "role[web]"],
+    normal: { tags: ["frontend"], foo: "bar" },
+    automatic: { platform: "ubuntu", platform_version: "22.04", fqdn: "web01" },
+  };
+
+  it("renders the environment, platform, run list and tags", () => {
+    render(<NodeDetails data={node} />);
+    expect(screen.getByText("production")).toBeInTheDocument();
+    expect(screen.getByText("ubuntu 22.04")).toBeInTheDocument();
+    expect(screen.getByText("recipe[apache2::default]")).toBeInTheDocument();
+    expect(screen.getByText("role[web]")).toBeInTheDocument();
+    // appears as a tag chip and again inside the normal-attributes tree
+    expect(screen.getAllByText("frontend").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("does not throw on a malformed object", () => {
+    expect(() => render(<NodeDetails data={"oops"} />)).not.toThrow();
+    expect(screen.getByText("No run list.")).toBeInTheDocument();
+  });
+});
+
+describe("RoleDetails", () => {
+  it("renders per-environment run lists", () => {
+    render(
+      <RoleDetails
+        data={{
+          run_list: ["recipe[base]"],
+          env_run_lists: { production: ["recipe[prod]"] },
+        }}
+      />,
+    );
+    expect(screen.getByText("production")).toBeInTheDocument();
+    expect(screen.getByText("recipe[prod]")).toBeInTheDocument();
+  });
+});
+
+describe("EnvironmentDetails", () => {
+  it("renders cookbook version constraints", () => {
+    render(
+      <EnvironmentDetails
+        data={{ cookbook_versions: { apache2: ">= 1.0.0" } }}
+      />,
+    );
+    expect(screen.getByText("apache2")).toBeInTheDocument();
+    expect(screen.getByText(">= 1.0.0")).toBeInTheDocument();
+  });
+});
+
+describe("GroupDetails", () => {
+  it("lists users and reports empties", () => {
+    render(<GroupDetails data={{ users: ["anna"], clients: [] }} />);
+    expect(screen.getByText("anna")).toBeInTheDocument();
+    expect(screen.getByText("No clients.")).toBeInTheDocument();
+  });
+});
+
+describe("ClientDetails", () => {
+  it("renders validator/admin as yes/no", () => {
+    render(<ClientDetails data={{ name: "node1", validator: true, admin: false }} />);
+    expect(screen.getByText("node1")).toBeInTheDocument();
+    expect(screen.getByText("yes")).toBeInTheDocument();
+    expect(screen.getByText("no")).toBeInTheDocument();
+  });
+});
+
+describe("DataBagItemDetails", () => {
+  it("shows the id and the remaining contents", () => {
+    render(<DataBagItemDetails data={{ id: "secret", password: "p@ss" }} />);
+    expect(screen.getByText("secret")).toBeInTheDocument();
+    expect(screen.getByText("p@ss")).toBeInTheDocument();
+  });
+});
+
+describe("AttributeTree", () => {
+  it("expands a nested object on click", async () => {
+    const user = userEvent.setup();
+    render(<AttributeTree data={{ outer: { inner: { leaf: "value" } } }} />);
+    // top level is open by default; nested levels start collapsed
+    expect(screen.queryByText("value")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /inner/i }));
+    expect(screen.getByText("value")).toBeInTheDocument();
+  });
+});

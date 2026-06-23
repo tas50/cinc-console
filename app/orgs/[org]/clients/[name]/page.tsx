@@ -2,6 +2,7 @@ import { currentUser } from "@/lib/guard";
 import { clients } from "@/lib/cinc/readonly";
 import { safeGet, explainRead } from "@/lib/cinc/safe-get";
 import { ObjectEditor } from "@/components/object-editor";
+import { ClientDetails } from "@/components/details/client-details";
 
 export default async function ClientDetail({
   params,
@@ -19,6 +20,7 @@ export default async function ClientDetail({
     <ObjectEditor
       name={name}
       initialJson={JSON.stringify(res.data, null, 2)}
+      details={<ClientDetails data={res.data} />}
       backHref={`/orgs/${org}/clients`}
       readOnly={true}
     />

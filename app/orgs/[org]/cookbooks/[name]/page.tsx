@@ -2,6 +2,7 @@ import { currentUser } from "@/lib/guard";
 import { cookbooks } from "@/lib/cinc/readonly";
 import { safeGet, explainRead } from "@/lib/cinc/safe-get";
 import { ObjectEditor } from "@/components/object-editor";
+import { CookbookDetails } from "@/components/details/cookbook-details";
 
 export default async function CookbookDetail({
   params,
@@ -19,6 +20,7 @@ export default async function CookbookDetail({
     <ObjectEditor
       name={name}
       initialJson={JSON.stringify(res.data, null, 2)}
+      details={<CookbookDetails data={res.data} />}
       backHref={`/orgs/${org}/cookbooks`}
       readOnly={true}
     />
