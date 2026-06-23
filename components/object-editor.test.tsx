@@ -51,6 +51,19 @@ describe("ObjectEditor", () => {
     expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
   });
 
+  it("renders a title icon to the left of the name when provided", () => {
+    render(
+      <ObjectEditor
+        name="web01"
+        titleIcon={<span data-testid="title-icon">icon</span>}
+        initialJson={json}
+        details={<p>Curated view</p>}
+        backHref="/back"
+      />,
+    );
+    expect(screen.getByTestId("title-icon")).toBeInTheDocument();
+  });
+
   it("falls back to JSON-only when no details view is provided", () => {
     render(
       <ObjectEditor name="x" initialJson={json} backHref="/back" onSave={vi.fn()} />,

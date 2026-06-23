@@ -9,6 +9,13 @@ import {
 } from "./primitives";
 import { AttributeTree } from "./attribute-tree";
 
+/** The node's reported platform (`automatic.platform`), if any. */
+export function nodePlatform(data: unknown): unknown {
+  const node = isRecord(data) ? data : {};
+  const automatic = isRecord(node.automatic) ? node.automatic : {};
+  return automatic.platform;
+}
+
 function platformText(auto: Record<string, unknown>): string | null {
   const p = auto.platform;
   const v = auto.platform_version;
