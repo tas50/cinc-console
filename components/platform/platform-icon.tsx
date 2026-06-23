@@ -89,8 +89,10 @@ const paths: Record<GlyphKey, ReactElement> = {
   ),
   // mountain peaks
   alpine: <path d="M4 19l5-9 3 5 2-3 6 7H4z" />,
-  // triangle
-  arch: <path d="M12 3L3 21l9-4 9 4L12 3zm0 5l5.5 11L12 16.7 6.5 19 12 8z" />,
+  // official Arch Linux logo, ™ mark removed (32x32 viewBox; see viewBoxFor)
+  arch: (
+    <path d="M15.188 0.807c-1.354 3.313-2.167 5.484-3.672 8.703 0.922 0.979 2.057 2.12 3.896 3.406-1.979-0.818-3.328-1.635-4.339-2.484-1.927 4.026-4.948 9.75-11.073 20.76 4.818-2.781 8.547-4.495 12.026-5.151-0.146-0.641-0.234-1.333-0.229-2.063l0.005-0.151c0.078-3.089 1.682-5.458 3.583-5.297s3.38 2.792 3.307 5.88c-0.016 0.578-0.083 1.135-0.198 1.656 3.443 0.672 7.135 2.38 11.885 5.125-0.938-1.724-1.771-3.281-2.573-4.76-1.255-0.974-2.568-2.245-5.24-3.62 1.839 0.479 3.151 1.031 4.177 1.646-8.12-15.109-8.771-17.12-11.557-23.651z" />
+  ),
 };
 
 // Most glyphs are drawn in a 24x24 box; the Debian swirl ships at 32x32.
@@ -99,6 +101,7 @@ const viewBoxFor: Partial<Record<GlyphKey, string>> = {
   debian: "0 0 32 32",
   rocky: "0 0 192 192",
   amazon: "0 0 640 512",
+  arch: "0 0 32 32",
 };
 
 function Glyph({ label, glyph, ...rest }: GlyphProps) {
