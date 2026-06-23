@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { JsonEditor } from "./json-editor";
@@ -21,6 +21,7 @@ function explain(error: string): string {
 export function ObjectEditor({
   name,
   initialJson,
+  details,
   onSave,
   onDelete,
   backHref,
@@ -28,6 +29,12 @@ export function ObjectEditor({
 }: {
   name: string;
   initialJson: string;
+  /**
+   * Curated human-readable view. When provided it is shown by default and the
+   * raw JSON becomes an escape hatch reached via the toggle. Without it the
+   * editor falls back to JSON-only.
+   */
+  details?: ReactNode;
   onSave?: (json: string) => Promise<ActionResult>;
   onDelete?: () => Promise<ActionResult>;
   backHref: string;
@@ -40,6 +47,11 @@ export function ObjectEditor({
     null,
   );
   const [pending, startTransition] = useTransition();
+  // Show the curated view first when we have one; JSON is the escape hatch.
+  const [mode, setMode] = useState<"details" | "json">(
+    details ? "details" : "json",
+  );
+  const showingJson = mode === "json" || !details;
 
   function save() {
     if (!onSave) return;
@@ -79,20 +91,26 @@ export function ObjectEditor({
           </Link>
           <h1 className="font-mono text-xl font-semibold">{name}</h1>
         </div>
-        {!readOnly && (
-          <div className="flex gap-2">
-            {onDelete && (
-              <Button variant="danger" onClick={remove} disabled={pending}>
-                Delete
-              </Button>
-            )}
-            {onSave && (
-              <Button onClick={save} disabled={pending || !valid}>
-                {pending ? "Saving…" : "Save"}
-              </Button>
-            )}
-          </div>
-        )}
+        <div className="flex gap-2">
+          {details && (
+            <Button
+              variant="secondary"
+              onClick={() => setMode(showingJson ? "details" : "json")}
+            >
+              {showingJson ? "View details" : readOnly ? "View JSON" : "Edit JSON"}
+            </Button>
+          )}
+          {!readOnly && onDelete && (
+            <Button variant="danger" onClick={remove} disabled={pending}>
+              Delete
+            </Button>
+          )}
+          {!readOnly && onSave && showingJson && (
+            <Button onClick={save} disabled={pending || !valid}>
+              {pending ? "Saving…" : "Save"}
+            </Button>
+          )}
+        </div>
       </div>
 
       {status && (
@@ -104,12 +122,16 @@ export function ObjectEditor({
         </p>
       )}
 
-      <JsonEditor
-        value={json}
-        onChange={setJson}
-        onValidityChange={setValid}
-        readOnly={readOnly}
-      />
+      {showingJson ? (
+        <JsonEditor
+          value={json}
+          onChange={setJson}
+          onValidityChange={setValid}
+          readOnly={readOnly}
+        />
+      ) : (
+        details
+      )}
     </div>
   );
 }

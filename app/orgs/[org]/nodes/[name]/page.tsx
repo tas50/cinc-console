@@ -2,6 +2,7 @@ import { currentUser } from "@/lib/guard";
 import { makeResource } from "@/lib/cinc/resource";
 import { safeGet, explainRead } from "@/lib/cinc/safe-get";
 import { ObjectEditor } from "@/components/object-editor";
+import { NodeDetails } from "@/components/details/node-details";
 import { saveNode, deleteNode } from "../actions";
 
 const nodes = makeResource("nodes");
@@ -23,6 +24,7 @@ export default async function NodeDetail({
     <ObjectEditor
       name={name}
       initialJson={JSON.stringify(res.data, null, 2)}
+      details={<NodeDetails data={res.data} />}
       backHref={base}
       onSave={saveNode.bind(null, org, name)}
       onDelete={deleteNode.bind(null, org, name)}

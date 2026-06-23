@@ -2,6 +2,7 @@ import { currentUser } from "@/lib/guard";
 import { members } from "@/lib/cinc/members";
 import { safeGet, explainRead } from "@/lib/cinc/safe-get";
 import { ObjectEditor } from "@/components/object-editor";
+import { GroupDetails } from "@/components/details/group-details";
 import { saveGroup } from "../../actions";
 
 export default async function GroupDetail({
@@ -21,6 +22,7 @@ export default async function GroupDetail({
     <ObjectEditor
       name={name}
       initialJson={JSON.stringify(res.data, null, 2)}
+      details={<GroupDetails data={res.data} />}
       backHref={base}
       onSave={saveGroup.bind(null, org, name)}
     />
