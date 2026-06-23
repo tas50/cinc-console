@@ -8,6 +8,7 @@ import {
   isRecord,
 } from "./primitives";
 import { AttributeTree } from "./attribute-tree";
+import { JsonTree } from "./json-tree";
 
 /** The node's reported platform (`automatic.platform`), if any. */
 export function nodePlatform(data: unknown): unknown {
@@ -77,7 +78,7 @@ export function NodeDetails({ data }: { data: unknown }) {
       </DetailSection>
 
       <DetailSection title="Automatic attributes">
-        <AttributeTree data={node.automatic} defaultOpen={false} />
+        <JsonTree value={node.automatic ?? {}} />
       </DetailSection>
     </div>
   );
