@@ -37,9 +37,9 @@ const paths: Record<GlyphKey, ReactElement> = {
   generic: (
     <path d="M3 4h18a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm0 9h18a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1zm3 2.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm0-9a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
   ),
-  // four-pane flag
+  // official Windows four-pane flag
   windows: (
-    <path d="M3 5l8-1v8H3V5zm9-1.2L21 3v9h-9V3.8zM3 13h8v8l-8-1v-7zm9 0h9v9l-9-1.2V13z" />
+    <path d="M22 2 11.2 3.6v8l10.8-.1V2zM10.2 12.5 2 12.4v6.8l8.1 1.1.1-7.8zM2 4.8v6.8h8.1V3.7L2 4.8zm9.1 7.7v7.9L22 22v-9.4l-10.9-.1z" />
   ),
   // circle of friends: ring plus three dots
   ubuntu: (
