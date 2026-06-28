@@ -139,9 +139,37 @@ export function Chips({
   );
 }
 
-/** A run list rendered as monospace chips (recipe[…], role[…]). */
+/**
+ * A run list. Run lists are **ordered** — Chef applies them top to bottom — so
+ * render them as a numbered, vertical ordered list rather than a chip cloud,
+ * making the execution order unmistakable. The `<ol>` also conveys the ordering
+ * to assistive tech; the visible index is decorative (aria-hidden).
+ */
 export function RunList({ items }: { items: unknown }) {
-  return <Chips items={items} mono empty="No run list." />;
+  if (!Array.isArray(items) || items.length === 0)
+    return <EmptyState>No run list.</EmptyState>;
+  return (
+    <ol className="space-y-1">
+      {items.map((item, i) => (
+        <li
+          key={i}
+          className="flex items-baseline gap-3 rounded bg-surface-2 px-2 py-1"
+        >
+          <span
+            aria-hidden="true"
+            className="select-none font-mono text-xs tabular-nums text-muted"
+          >
+            {i + 1}.
+          </span>
+          <span className="font-mono text-xs text-text">
+            {typeof item === "string" || typeof item === "number"
+              ? String(item)
+              : JSON.stringify(item)}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
 }
 
 /**
