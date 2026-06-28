@@ -24,7 +24,12 @@ export default async function RoleDetail({
     <ObjectEditor
       name={name}
       initialJson={JSON.stringify(res.data, null, 2)}
-      details={<RoleDetails data={res.data} />}
+      details={
+        <RoleDetails
+          data={res.data}
+          onSaveRunList={saveRole.bind(null, org, name)}
+        />
+      }
       backHref={base}
       onSave={saveRole.bind(null, org, name)}
       onDelete={deleteRole.bind(null, org, name)}

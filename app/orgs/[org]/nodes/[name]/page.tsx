@@ -31,7 +31,12 @@ export default async function NodeDetail({
         />
       }
       initialJson={JSON.stringify(res.data, null, 2)}
-      details={<NodeDetails data={res.data} />}
+      details={
+        <NodeDetails
+          data={res.data}
+          onSaveRunList={saveNode.bind(null, org, name)}
+        />
+      }
       backHref={base}
       onSave={saveNode.bind(null, org, name)}
       onDelete={deleteNode.bind(null, org, name)}
