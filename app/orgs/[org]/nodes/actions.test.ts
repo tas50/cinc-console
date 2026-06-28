@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { expect, test, vi, beforeEach } from "vitest";
+import { revalidatePath } from "next/cache";
 import { CincError } from "@/lib/cinc/errors";
 
 vi.mock("@/lib/session", () => ({ requireUser: async () => "alice" }));
@@ -56,4 +57,17 @@ test("deleteNode removes by name", async () => {
   remove.mockResolvedValueOnce({});
   await expect(deleteNode("acme", "web01")).resolves.toEqual({ ok: true });
   expect(remove).toHaveBeenCalledWith("alice", "acme", "web01");
+});
+
+test("deleteNode revalidates the nodes list so the deleted node disappears", async () => {
+  remove.mockResolvedValueOnce({});
+  await deleteNode("acme", "web01");
+  expect(revalidatePath).toHaveBeenCalledWith("/orgs/acme/nodes", "layout");
+});
+
+test("a failed mutation does not revalidate", async () => {
+  vi.mocked(revalidatePath).mockClear();
+  remove.mockRejectedValueOnce(new CincError(403, "denied"));
+  await deleteNode("acme", "web01");
+  expect(revalidatePath).not.toHaveBeenCalled();
 });

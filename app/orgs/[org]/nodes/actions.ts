@@ -14,7 +14,9 @@ export async function saveNode(
   const user = await requireUser();
   const parsed = parseJsonObject(json);
   if (!parsed.ok) return { error: "invalid JSON" };
-  return runAction(() => nodes.update(user, org, name, parsed.value));
+  return runAction(() => nodes.update(user, org, name, parsed.value), {
+    revalidate: `/orgs/${org}/nodes`,
+  });
 }
 
 export async function createNode(
@@ -25,7 +27,9 @@ export async function createNode(
   const user = await requireUser();
   const parsed = parseJsonObject(json);
   if (!parsed.ok) return { error: "invalid JSON" };
-  return runAction(() => nodes.create(user, org, { ...parsed.value, name }));
+  return runAction(() => nodes.create(user, org, { ...parsed.value, name }), {
+    revalidate: `/orgs/${org}/nodes`,
+  });
 }
 
 export async function deleteNode(
@@ -33,5 +37,7 @@ export async function deleteNode(
   name: string,
 ): Promise<ActionResult> {
   const user = await requireUser();
-  return runAction(() => nodes.remove(user, org, name));
+  return runAction(() => nodes.remove(user, org, name), {
+    revalidate: `/orgs/${org}/nodes`,
+  });
 }

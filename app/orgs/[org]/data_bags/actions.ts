@@ -9,7 +9,9 @@ export async function createBag(
   name: string,
 ): Promise<ActionResult> {
   const user = await requireUser();
-  return runAction(() => dataBags.createBag(user, org, name));
+  return runAction(() => dataBags.createBag(user, org, name), {
+    revalidate: `/orgs/${org}/data_bags`,
+  });
 }
 
 export async function deleteBag(
@@ -17,7 +19,9 @@ export async function deleteBag(
   bag: string,
 ): Promise<ActionResult> {
   const user = await requireUser();
-  return runAction(() => dataBags.removeBag(user, org, bag));
+  return runAction(() => dataBags.removeBag(user, org, bag), {
+    revalidate: `/orgs/${org}/data_bags`,
+  });
 }
 
 export async function saveItem(
@@ -29,7 +33,9 @@ export async function saveItem(
   const user = await requireUser();
   const parsed = parseJsonObject(json);
   if (!parsed.ok) return { error: "invalid JSON" };
-  return runAction(() => dataBags.putItem(user, org, bag, id, parsed.value));
+  return runAction(() => dataBags.putItem(user, org, bag, id, parsed.value), {
+    revalidate: `/orgs/${org}/data_bags/${bag}`,
+  });
 }
 
 export async function createItem(
@@ -41,8 +47,9 @@ export async function createItem(
   const user = await requireUser();
   const parsed = parseJsonObject(json);
   if (!parsed.ok) return { error: "invalid JSON" };
-  return runAction(() =>
-    dataBags.createItem(user, org, bag, { ...parsed.value, id }),
+  return runAction(
+    () => dataBags.createItem(user, org, bag, { ...parsed.value, id }),
+    { revalidate: `/orgs/${org}/data_bags/${bag}` },
   );
 }
 
@@ -52,5 +59,7 @@ export async function deleteItem(
   id: string,
 ): Promise<ActionResult> {
   const user = await requireUser();
-  return runAction(() => dataBags.removeItem(user, org, bag, id));
+  return runAction(() => dataBags.removeItem(user, org, bag, id), {
+    revalidate: `/orgs/${org}/data_bags/${bag}`,
+  });
 }

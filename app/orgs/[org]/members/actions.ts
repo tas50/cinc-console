@@ -9,7 +9,9 @@ export async function inviteUser(
   username: string,
 ): Promise<ActionResult> {
   const user = await requireUser();
-  return runAction(() => members.invite(user, org, username));
+  return runAction(() => members.invite(user, org, username), {
+    revalidate: `/orgs/${org}/members`,
+  });
 }
 
 export async function removeUser(
@@ -17,7 +19,9 @@ export async function removeUser(
   username: string,
 ): Promise<ActionResult> {
   const user = await requireUser();
-  return runAction(() => members.removeUser(user, org, username));
+  return runAction(() => members.removeUser(user, org, username), {
+    revalidate: `/orgs/${org}/members`,
+  });
 }
 
 export async function saveGroup(
@@ -28,5 +32,7 @@ export async function saveGroup(
   const user = await requireUser();
   const parsed = parseJsonObject(json);
   if (!parsed.ok) return { error: "invalid JSON" };
-  return runAction(() => members.updateGroup(user, org, group, parsed.value));
+  return runAction(() => members.updateGroup(user, org, group, parsed.value), {
+    revalidate: `/orgs/${org}/members`,
+  });
 }

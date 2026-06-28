@@ -14,7 +14,9 @@ export async function saveEnvironment(
   const user = await requireUser();
   const parsed = parseJsonObject(json);
   if (!parsed.ok) return { error: "invalid JSON" };
-  return runAction(() => environments.update(user, org, name, parsed.value));
+  return runAction(() => environments.update(user, org, name, parsed.value), {
+    revalidate: `/orgs/${org}/environments`,
+  });
 }
 
 export async function createEnvironment(
@@ -25,7 +27,10 @@ export async function createEnvironment(
   const user = await requireUser();
   const parsed = parseJsonObject(json);
   if (!parsed.ok) return { error: "invalid JSON" };
-  return runAction(() => environments.create(user, org, { ...parsed.value, name }));
+  return runAction(
+    () => environments.create(user, org, { ...parsed.value, name }),
+    { revalidate: `/orgs/${org}/environments` },
+  );
 }
 
 export async function deleteEnvironment(
@@ -33,5 +38,7 @@ export async function deleteEnvironment(
   name: string,
 ): Promise<ActionResult> {
   const user = await requireUser();
-  return runAction(() => environments.remove(user, org, name));
+  return runAction(() => environments.remove(user, org, name), {
+    revalidate: `/orgs/${org}/environments`,
+  });
 }
