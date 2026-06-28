@@ -39,6 +39,7 @@ export default async function EnvironmentDetail({
         <EnvironmentDetails
           data={res.data}
           onSaveOverview={saveEnvironment.bind(null, org, name)}
+          onSaveConstraints={saveEnvironment.bind(null, org, name)}
         />
       }
       backHref={base}
