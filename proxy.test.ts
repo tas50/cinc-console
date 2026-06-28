@@ -34,6 +34,12 @@ test("an off-site from is ignored (no open redirect)", () => {
   expect(new URL(location(res)!).pathname).toBe("/orgs");
 });
 
+test("a backslash-prefixed from is ignored (browsers treat /\\ as //)", () => {
+  const res = proxy(req("/login?from=/%5Cevil.com", { session: true }));
+  expect(new URL(location(res)!).host).toBe("console.test");
+  expect(new URL(location(res)!).pathname).toBe("/orgs");
+});
+
 test("an authenticated request passes through", () => {
   const res = proxy(req("/orgs/acme/nodes", { session: true }));
   expect(location(res)).toBeNull();
