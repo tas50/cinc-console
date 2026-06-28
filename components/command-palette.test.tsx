@@ -6,6 +6,12 @@ import { CommandPalette } from "./command-palette";
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
+vi.mock("@/lib/palette-search", () => ({
+  searchOrgObjects: vi.fn(async () => [
+    { kind: "nodes", label: "Node", name: "web01" },
+  ]),
+}));
+
 beforeEach(() => push.mockClear());
 
 const orgs = [
@@ -39,6 +45,16 @@ test("arrow keys move the active option and Enter runs it", async () => {
   await userEvent.click(screen.getByRole("button", { name: /command palette/i }));
   await userEvent.keyboard("{ArrowDown}{Enter}"); // first -> second section = Roles
   expect(push).toHaveBeenCalledWith("/orgs/acme/roles");
+});
+
+test("jumps to an object by name once you type", async () => {
+  render(<CommandPalette org="acme" orgs={orgs} />);
+  await userEvent.click(screen.getByRole("button", { name: /command palette/i }));
+  await userEvent.type(screen.getByRole("combobox"), "web01");
+  const option = await screen.findByRole("option", { name: /web01/ });
+  expect(option).toBeInTheDocument();
+  await userEvent.keyboard("{Enter}");
+  expect(push).toHaveBeenCalledWith("/orgs/acme/nodes/web01");
 });
 
 test("Escape closes without navigating", async () => {
