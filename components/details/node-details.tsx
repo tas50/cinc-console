@@ -10,6 +10,7 @@ import {
 import { AttributeTree } from "./attribute-tree";
 import { JsonTree } from "./json-tree";
 import { RunListEditor } from "./run-list-editor";
+import { TagsEditor } from "./tags-editor";
 import type { ActionResult } from "@/lib/cinc/action";
 
 /** The node's reported platform (`automatic.platform`), if any. */
@@ -35,10 +36,13 @@ function platformText(auto: Record<string, unknown>): string | null {
 export function NodeDetails({
   data,
   onSaveRunList,
+  onSaveTags,
 }: {
   data: unknown;
   /** When provided, the run list becomes editable and saves via this action. */
   onSaveRunList?: (json: string) => Promise<ActionResult>;
+  /** When provided, the tags become editable and save via this action. */
+  onSaveTags?: (json: string) => Promise<ActionResult>;
 }) {
   const node = isRecord(data) ? data : {};
   const automatic = isRecord(node.automatic) ? node.automatic : {};
@@ -74,9 +78,13 @@ export function NodeDetails({
         </DetailSection>
       )}
 
-      <DetailSection title="Tags">
-        <Chips items={normal.tags} empty="No tags." />
-      </DetailSection>
+      {onSaveTags ? (
+        <TagsEditor data={node} onSave={onSaveTags} />
+      ) : (
+        <DetailSection title="Tags">
+          <Chips items={normal.tags} empty="No tags." />
+        </DetailSection>
+      )}
 
       <DetailSection title="Normal attributes">
         <AttributeTree data={node.normal} />
