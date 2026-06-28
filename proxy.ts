@@ -8,12 +8,26 @@ export function proxy(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname.startsWith("/login");
 
   if (!hasSession && !isAuthPage) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    // Remember where they were headed so login can send them back (e.g. after
+    // the session cookie expires mid-session).
+    const url = new URL("/login", request.url);
+    const from = request.nextUrl.pathname + request.nextUrl.search;
+    if (from !== "/") url.searchParams.set("from", from);
+    return NextResponse.redirect(url);
   }
   if (hasSession && isAuthPage) {
-    return NextResponse.redirect(new URL("/orgs", request.url));
+    return NextResponse.redirect(new URL(safeFrom(request) ?? "/orgs", request.url));
   }
   return NextResponse.next();
+}
+
+/**
+ * The `from` query param, but only when it's an internal absolute path — guards
+ * against an open redirect (`//evil.com`, `https://…`).
+ */
+function safeFrom(request: NextRequest): string | null {
+  const from = request.nextUrl.searchParams.get("from");
+  return from && from.startsWith("/") && !from.startsWith("//") ? from : null;
 }
 
 export const config = {

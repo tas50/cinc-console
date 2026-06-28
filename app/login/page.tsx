@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Image from "next/image";
 import { LoginForm } from "./login-form";
 
@@ -19,7 +20,9 @@ export default function LoginPage() {
           <h1 className="text-lg font-medium tracking-tight text-text">console</h1>
           <p className="mt-1 text-sm text-muted">Sign in to your Cinc server</p>
         </div>
-        <LoginForm />
+        <Suspense fallback={null}>
+          <LoginForm />
+        </Suspense>
       </div>
     </main>
   );
