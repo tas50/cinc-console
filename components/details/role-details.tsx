@@ -35,13 +35,13 @@ export function RoleDetails({
         </FieldGrid>
       </DetailSection>
 
-      <DetailSection title="Run list">
-        {onSaveRunList ? (
-          <RunListEditor data={role} onSave={onSaveRunList} />
-        ) : (
+      {onSaveRunList ? (
+        <RunListEditor data={role} onSave={onSaveRunList} />
+      ) : (
+        <DetailSection title="Run list">
           <RunList items={role.run_list} />
-        )}
-      </DetailSection>
+        </DetailSection>
+      )}
 
       <DetailSection title="Per-environment run lists">
         <KeyValueTable

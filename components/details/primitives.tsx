@@ -10,16 +10,22 @@ export function isRecord(v: unknown): v is Record<string, unknown> {
 /** A titled card grouping one slice of an object (run list, attributes, …). */
 export function DetailSection({
   title,
+  action,
   children,
 }: {
   title: string;
+  /** Optional control rendered small, right-aligned in the section header. */
+  action?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <Card className="space-y-3">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">
-        {title}
-      </h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">
+          {title}
+        </h2>
+        {action}
+      </div>
       {children}
     </Card>
   );

@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EmptyState } from "./primitives";
+import { DetailSection, EmptyState } from "./primitives";
 import type { ActionResult } from "@/lib/cinc/action";
 
 function toItems(data: Record<string, unknown>): string[] {
@@ -16,7 +16,7 @@ function PencilIcon() {
     <svg
       aria-hidden="true"
       viewBox="0 0 16 16"
-      className="h-3.5 w-3.5"
+      className="h-3 w-3"
       fill="currentColor"
     >
       <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
@@ -25,11 +25,11 @@ function PencilIcon() {
 }
 
 /**
- * A node's or role's ordered run list. View-only by default — order matters
- * (Chef applies it top to bottom) so it renders as a numbered list — with an
- * explicit Edit affordance that reveals add / remove / reorder controls plus
- * Save and Cancel. Cancel reverts to the last-saved list. Saving merges the new
- * run_list into the object and delegates to the page's save action.
+ * A node's or role's ordered run list, rendered as its own detail section.
+ * View-only by default with a small "Edit" control in the section's corner;
+ * editing reveals add / remove / reorder plus Save and Cancel. Cancel reverts
+ * to the last-saved list. Saving merges run_list into the object and delegates
+ * to the page's save action.
  */
 export function RunListEditor({
   data,
@@ -48,11 +48,6 @@ export function RunListEditor({
   );
   const [pending, startTransition] = useTransition();
   const dirty = JSON.stringify(items) !== JSON.stringify(initial);
-
-  function startEdit() {
-    setStatus(null);
-    setEditing(true);
-  }
 
   function cancel() {
     setItems(initial);
@@ -102,10 +97,26 @@ export function RunListEditor({
     });
   }
 
-  // Read-only view: the ordered list plus an Edit affordance.
+  // Read-only: ordered list with a small Edit control tucked in the corner.
   if (!editing) {
     return (
-      <div className="space-y-3">
+      <DetailSection
+        title="Run list"
+        action={
+          <button
+            type="button"
+            onClick={() => {
+              setStatus(null);
+              setEditing(true);
+            }}
+            aria-label="Edit run list"
+            className="inline-flex items-center gap-1 rounded text-xs font-medium text-link hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <PencilIcon />
+            Edit
+          </button>
+        }
+      >
         {items.length === 0 ? (
           <EmptyState>No run list.</EmptyState>
         ) : (
@@ -131,17 +142,13 @@ export function RunListEditor({
             {status.text}
           </p>
         )}
-        <Button variant="secondary" onClick={startEdit}>
-          <PencilIcon />
-          Edit run list
-        </Button>
-      </div>
+      </DetailSection>
     );
   }
 
-  // Edit view: add / remove / reorder, then Save or Cancel.
+  // Edit: add / remove / reorder, then Save or Cancel.
   return (
-    <div className="space-y-3">
+    <DetailSection title="Run list">
       {items.length === 0 ? (
         <EmptyState>Empty run list. Add an entry below.</EmptyState>
       ) : (
@@ -219,6 +226,6 @@ export function RunListEditor({
         </Button>
         {dirty && <span className="text-xs text-muted">Unsaved changes</span>}
       </div>
-    </div>
+    </DetailSection>
   );
 }

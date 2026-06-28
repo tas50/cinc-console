@@ -66,13 +66,13 @@ export function NodeDetails({
         </FieldGrid>
       </DetailSection>
 
-      <DetailSection title="Run list">
-        {onSaveRunList ? (
-          <RunListEditor data={node} onSave={onSaveRunList} />
-        ) : (
+      {onSaveRunList ? (
+        <RunListEditor data={node} onSave={onSaveRunList} />
+      ) : (
+        <DetailSection title="Run list">
           <RunList items={node.run_list} />
-        )}
-      </DetailSection>
+        </DetailSection>
+      )}
 
       <DetailSection title="Tags">
         <Chips items={normal.tags} empty="No tags." />
