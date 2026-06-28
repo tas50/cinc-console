@@ -1,4 +1,5 @@
 import "server-only";
+import { revalidatePath } from "next/cache";
 import { isCincError } from "./errors";
 
 export type ActionResult = { ok: true } | { error: string };
@@ -7,12 +8,18 @@ export type ActionResult = { ok: true } | { error: string };
  * Run a cinc mutation and translate server errors into a UI-friendly result.
  * 403 (the server's ACL gate) becomes "forbidden" so the UI can explain it
  * rather than crashing.
+ *
+ * On success, `revalidate` invalidates that route subtree (as a layout, so both
+ * the list and its detail pages refresh) — without it a deleted object lingers
+ * in a cached list and `router.refresh()` alone races the navigation.
  */
 export async function runAction(
   fn: () => Promise<unknown>,
+  opts: { revalidate?: string } = {},
 ): Promise<ActionResult> {
   try {
     await fn();
+    if (opts.revalidate) revalidatePath(opts.revalidate, "layout");
     return { ok: true };
   } catch (e) {
     if (isCincError(e)) {
