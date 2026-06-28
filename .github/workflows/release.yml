@@ -16,7 +16,7 @@ jobs:
   image:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       # QEMU + buildx give us the cross-build (arm64) and OCI features.
       - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
@@ -58,7 +58,7 @@ jobs:
       # A second, Sigstore-signed SLSA provenance attestation recorded in GitHub's
       # transparency log and pushed alongside the image. Verify with:
       #   gh attestation verify oci://ghcr.io/<owner>/cinc-console:<tag> --owner <owner>
-      - uses: actions/attest-build-provenance@v2
+      - uses: actions/attest-build-provenance@96b4a1ef7235a096b17240c259729fdd70c83d45 # v2
         with:
           subject-name: ghcr.io/${{ github.repository_owner }}/cinc-console
           subject-digest: ${{ steps.build.outputs.digest }}
