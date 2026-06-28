@@ -41,6 +41,27 @@ test("blocks save on an invalid version", async () => {
   expect(screen.getByRole("button", { name: "Save constraints" })).toBeDisabled();
 });
 
+test("shows an inline error and marks the field invalid for trailing junk", async () => {
+  render(<CookbookConstraintsEditor data={data} onSave={onSave} />);
+  await enterEdit();
+  const version = screen.getByLabelText("Version");
+  await userEvent.clear(version);
+  await userEvent.type(version, "0.0.0sdfsad");
+  expect(version).toHaveAttribute("aria-invalid", "true");
+  expect(screen.getByRole("alert")).toHaveTextContent(/version like/i);
+  expect(screen.getByRole("button", { name: "Save constraints" })).toBeDisabled();
+});
+
+test("rejects a bare major version (Chef requires at least x.y)", async () => {
+  render(<CookbookConstraintsEditor data={data} onSave={onSave} />);
+  await enterEdit();
+  const version = screen.getByLabelText("Version");
+  await userEvent.clear(version);
+  await userEvent.type(version, "1");
+  expect(screen.getByRole("alert")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Save constraints" })).toBeDisabled();
+});
+
 test("adds a constraint via the operator dropdown and saves it as a string", async () => {
   render(<CookbookConstraintsEditor data={data} onSave={onSave} />);
   await enterEdit();
