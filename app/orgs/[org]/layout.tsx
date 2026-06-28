@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { notFound } from "next/navigation";
 import { currentSession } from "@/lib/guard";
 import { listUserOrgs } from "@/lib/cinc/orgs";
 import { AppShell } from "@/components/app-shell";
@@ -12,10 +13,17 @@ export default async function OrgLayout({
 }) {
   const { username, displayName } = await currentSession();
   const { org } = await params;
-  const orgs = await listUserOrgs(username).catch(() => [{ name: org }]);
+  // If we can list the user's orgs, a slug that isn't one of them is a 404 —
+  // otherwise a bogus org like /orgs/typo would render the whole shell and only
+  // fail object-by-object. If the orgs call itself fails (transient), degrade:
+  // assume the slug is valid and let the inner pages surface real errors.
+  const orgs = await listUserOrgs(username).catch(() => null);
+  if (orgs && !orgs.some((o) => o.name === org)) {
+    notFound();
+  }
 
   return (
-    <AppShell org={org} orgs={orgs} displayName={displayName}>
+    <AppShell org={org} orgs={orgs ?? [{ name: org }]} displayName={displayName}>
       {children}
     </AppShell>
   );
