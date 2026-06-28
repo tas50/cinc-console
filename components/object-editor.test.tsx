@@ -69,6 +69,9 @@ describe("ObjectEditor", () => {
       <ObjectEditor name="x" initialJson={json} backHref="/back" onSave={vi.fn()} />,
     );
     expect(screen.getByRole("textbox")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /JSON/ })).not.toBeInTheDocument();
+    // No details/JSON view toggle when there's no curated details view.
+    expect(
+      screen.queryByRole("button", { name: /view details|view json|edit json/i }),
+    ).not.toBeInTheDocument();
   });
 });
