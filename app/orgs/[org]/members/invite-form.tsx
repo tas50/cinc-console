@@ -20,17 +20,20 @@ export function InviteForm({
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
     const name = username.trim();
     if (!name) return;
     startTransition(async () => {
       const res = await onInvite(name);
       if ("ok" in res) {
         setUsername("");
+        setSuccess(`Added ${name} to this organization.`);
         router.refresh();
       } else {
         setError(explain(res.error));
@@ -51,6 +54,11 @@ export function InviteForm({
         {error && (
           <p role="alert" className="text-sm text-danger">
             {error}
+          </p>
+        )}
+        {success && (
+          <p role="status" className="text-sm text-success">
+            {success}
           </p>
         )}
       </div>

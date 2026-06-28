@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import Link from "next/link";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -15,11 +15,14 @@ export function ResourceTable({
   names,
   basePath,
   createHref,
+  emptyHint,
 }: {
   title: string;
   names: string[];
   basePath: string;
   createHref?: string;
+  /** Extra guidance shown when the org has none of this object yet. */
+  emptyHint?: ReactNode;
 }) {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(0);
@@ -58,8 +61,23 @@ export function ResourceTable({
       />
 
       <div className="overflow-hidden rounded-lg border border-border">
-        {filtered.length === 0 ? (
-          <p className="p-4 text-sm text-muted">No matching items.</p>
+        {names.length === 0 ? (
+          <div className="p-4 text-sm text-muted">
+            <p>No {title.toLowerCase()} in this organization yet.</p>
+            {emptyHint && <p className="mt-1">{emptyHint}</p>}
+            {createHref && (
+              <Link
+                href={createHref}
+                className="mt-2 inline-block text-link hover:underline"
+              >
+                Create one &rarr;
+              </Link>
+            )}
+          </div>
+        ) : filtered.length === 0 ? (
+          <p className="p-4 text-sm text-muted">
+            No {title.toLowerCase()} matching &ldquo;{q}&rdquo;.
+          </p>
         ) : (
           <ul className="divide-y divide-border">
             {visible.map((name) => (

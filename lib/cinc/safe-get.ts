@@ -20,5 +20,9 @@ export async function safeGet<T>(fn: () => Promise<T>): Promise<Fetched<T>> {
 export function explainRead(error: string): string {
   if (error === "forbidden")
     return "You don't have permission to view this in this organization.";
+  if (error === "not found")
+    return "This no longer exists, or you don't have access to it.";
+  if (error.startsWith("server error"))
+    return `The Cinc server returned an error (${error.replace(/\D/g, "") || "5xx"}). This is usually transient — reload to try again.`;
   return error;
 }
