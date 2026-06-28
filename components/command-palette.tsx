@@ -89,7 +89,11 @@ export function CommandPalette({ org, orgs }: { org: string; orgs: Org[] }) {
   function run(cmd: Command | undefined) {
     if (!cmd) return;
     setOpen(false);
-    router.push(cmd.href);
+    // Client-side navigation to an internal, app-constructed path (a fixed nav
+    // slug or a known org from the session's org list) — not an HTML response
+    // sink, and the search query never feeds the href. js-express-xss misfires
+    // on Next's router inside a "use client" component.
+    router.push(cmd.href); // nosemgrep: js-express-xss
   }
 
   function onKeyDown(e: React.KeyboardEvent) {
