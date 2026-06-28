@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ReactNode } from "react";
+import { CopyButton } from "@/components/ui/copy-button";
 
 /**
  * A collapsible, syntax-highlighted JSON tree. Top-level entries render
@@ -50,10 +51,20 @@ function Row({
   const [open, setOpen] = useState(false);
 
   if (!isContainer(value)) {
+    const copyValue =
+      typeof value === "string" ? value : JSON.stringify(value);
     return (
-      <div className="py-0.5">
-        {keyLabel(name, isArray)}
-        <Scalar value={value} />
+      <div className="group flex items-baseline gap-2 py-0.5">
+        <span>
+          {keyLabel(name, isArray)}
+          <Scalar value={value} />
+        </span>
+        <CopyButton
+          value={copyValue}
+          iconOnly
+          label={`Copy ${name} value`}
+          className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
+        />
       </div>
     );
   }

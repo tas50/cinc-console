@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { CopyButton } from "./ui/copy-button";
 
 /**
  * A dependency-light JSON editor: a monospace textarea with live validation.
@@ -37,6 +38,9 @@ export function JsonEditor({
 
   return (
     <div className="space-y-2">
+      <div className="flex justify-end">
+        <CopyButton value={value} label="Copy JSON" />
+      </div>
       <textarea
         aria-label={readOnly ? "JSON (read-only)" : "JSON editor"}
         aria-invalid={error ? true : undefined}
