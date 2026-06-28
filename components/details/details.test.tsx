@@ -27,6 +27,17 @@ describe("NodeDetails", () => {
     expect(screen.getAllByText("frontend").length).toBeGreaterThanOrEqual(1);
   });
 
+  it("renders the run list as an ordered list in run order", () => {
+    render(<NodeDetails data={node} />);
+    const ordered = screen
+      .getAllByRole("list")
+      .find((el) => el.tagName === "OL");
+    expect(ordered).toBeDefined();
+    const text = ordered!.textContent ?? "";
+    // run_list entries appear in order, apache2 before role[web]
+    expect(text.indexOf("apache2")).toBeLessThan(text.indexOf("role[web]"));
+  });
+
   it("does not throw on a malformed object", () => {
     expect(() => render(<NodeDetails data={"oops"} />)).not.toThrow();
     expect(screen.getByText("No run list.")).toBeInTheDocument();
