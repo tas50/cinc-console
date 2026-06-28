@@ -22,7 +22,12 @@ export default async function GroupDetail({
     <ObjectEditor
       name={name}
       initialJson={JSON.stringify(res.data, null, 2)}
-      details={<GroupDetails data={res.data} />}
+      details={
+        <GroupDetails
+          data={res.data}
+          onSaveMembers={saveGroup.bind(null, org, name)}
+        />
+      }
       backHref={base}
       onSave={saveGroup.bind(null, org, name)}
       onDelete={deleteGroup.bind(null, org, name)}
