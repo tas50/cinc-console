@@ -75,6 +75,24 @@ permission" (it never substitutes its own check).
 - v1 scope: nodes/roles/environments/data bags/members = CRUD;
   cookbooks/policies/clients = read-only. `_default` environment is read-only.
 
+## Accessibility
+
+**We comply with [WCAG 2.2 level AA](https://www.w3.org/TR/WCAG22/) — treat it
+as a hard requirement in everything we build, not a later polish pass.** A
+feature is not done until it works with a keyboard and a screen reader. Concretely:
+
+- Prefer semantic HTML and native controls (`<button>`, `<a>`, `<label htmlFor>`,
+  `<dialog>`) before reaching for ARIA. Every interactive element must be
+  keyboard-operable and have an accessible name.
+- Never signal state by **color alone** — pair it with text or an icon (e.g.
+  errors get an icon + `role="alert"`, not just red text).
+- Keep focus **visible** and managed: trap focus in modals, restore it on close,
+  and provide a skip-to-content link.
+- Announce async status/errors via `role="alert"` or an `aria-live` region.
+- Meet AA **contrast** (4.5:1 text, 3:1 UI/large text) and respect
+  `prefers-reduced-motion`.
+- New or changed UI should be checked against these before `make check` passes.
+
 ## Testing
 
 - Vitest. Server-side tests (signing, client, actions, lib) need the **node
