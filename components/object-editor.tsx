@@ -131,7 +131,9 @@ export function ObjectEditor({
               {showingJson ? "View details" : readOnly ? "View JSON" : "Edit JSON"}
             </Button>
           )}
-          {!readOnly && onDelete && (
+          {/* Delete is allowed even in read-only views — you can't edit the
+              JSON but you can still remove the object. */}
+          {onDelete && (
             <Button
               variant="danger"
               onClick={() => setConfirmDelete(true)}

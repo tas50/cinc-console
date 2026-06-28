@@ -3,6 +3,7 @@ import { clients } from "@/lib/cinc/readonly";
 import { safeGet, explainRead } from "@/lib/cinc/safe-get";
 import { ObjectEditor } from "@/components/object-editor";
 import { ClientDetails } from "@/components/details/client-details";
+import { deleteClientAction } from "../actions";
 
 export default async function ClientDetail({
   params,
@@ -23,6 +24,7 @@ export default async function ClientDetail({
       details={<ClientDetails data={res.data} />}
       backHref={`/orgs/${org}/clients`}
       readOnly={true}
+      onDelete={deleteClientAction.bind(null, org, name)}
     />
   );
 }

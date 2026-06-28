@@ -26,3 +26,12 @@ export async function createClient(
   const privateKey = res.chef_key?.private_key ?? res.private_key ?? "";
   return { name, privateKey };
 }
+
+/** Delete a client (`DELETE /clients/NAME`). */
+export async function deleteClient(
+  user: string,
+  org: string,
+  name: string,
+): Promise<void> {
+  await cincRequest({ user, org, method: "DELETE", path: `/clients/${name}` });
+}

@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/session";
-import { createClient } from "@/lib/cinc/clients";
+import { createClient, deleteClient } from "@/lib/cinc/clients";
+import { runAction, type ActionResult } from "@/lib/cinc/action";
 import { isCincError } from "@/lib/cinc/errors";
 
 export type CreateClientResult =
@@ -30,4 +31,14 @@ export async function createClientAction(
     }
     throw e;
   }
+}
+
+export async function deleteClientAction(
+  org: string,
+  name: string,
+): Promise<ActionResult> {
+  const user = await requireUser();
+  return runAction(() => deleteClient(user, org, name), {
+    revalidate: `/orgs/${org}/clients`,
+  });
 }
