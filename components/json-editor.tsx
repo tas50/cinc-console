@@ -38,6 +38,8 @@ export function JsonEditor({
   return (
     <div className="space-y-2">
       <textarea
+        aria-label={readOnly ? "JSON (read-only)" : "JSON editor"}
+        aria-invalid={error ? true : undefined}
         spellCheck={false}
         readOnly={readOnly}
         value={value}

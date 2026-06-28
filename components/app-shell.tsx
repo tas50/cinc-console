@@ -36,6 +36,14 @@ export function AppShell({
 
   return (
     <div className="flex min-h-screen flex-col">
+      {/* Skip link (WCAG 2.4.1): hidden until focused, lets keyboard users
+          jump past the header and nav straight to the page content. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:text-primary-foreground"
+      >
+        Skip to content
+      </a>
       <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3">
         <div className="flex items-center gap-4">
           <Link
@@ -60,7 +68,10 @@ export function AppShell({
       <div className="flex flex-1 flex-col md:flex-row">
         {/* On mobile the nav is a horizontal, scrollable strip under the header;
             from md it becomes the fixed left rail. */}
-        <nav className="shrink-0 overflow-x-auto border-b border-border bg-surface p-3 md:w-48 md:overflow-x-visible md:border-b-0 md:border-r">
+        <nav
+          aria-label="Primary"
+          className="shrink-0 overflow-x-auto border-b border-border bg-surface p-3 md:w-48 md:overflow-x-visible md:border-b-0 md:border-r"
+        >
           <ul className="flex gap-1 md:flex-col md:space-y-1">
             {NAV.map((item) => {
               const href = `${base}/${item.slug}`;
@@ -84,7 +95,9 @@ export function AppShell({
           </ul>
         </nav>
 
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main id="main-content" tabIndex={-1} className="flex-1 p-4 md:p-6">
+          {children}
+        </main>
       </div>
     </div>
   );
