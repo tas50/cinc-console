@@ -5,7 +5,11 @@ import Link from "next/link";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 
-/** A searchable list of object names that link to their detail pages. */
+/** Rows rendered per page. The Cinc list call returns every name at once, so
+ * this only bounds the DOM — it keeps large orgs (thousands of nodes) snappy. */
+const PAGE_SIZE = 50;
+
+/** A searchable, paginated list of object names that link to their detail pages. */
 export function ResourceTable({
   title,
   names,
@@ -18,10 +22,22 @@ export function ResourceTable({
   createHref?: string;
 }) {
   const [q, setQ] = useState("");
+  const [page, setPage] = useState(0);
   const filtered = useMemo(() => {
     const needle = q.toLowerCase();
     return names.filter((n) => n.toLowerCase().includes(needle)).sort();
   }, [names, q]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  // Clamp during render so a shrinking filter can never strand us past the end.
+  const current = Math.min(page, pageCount - 1);
+  const start = current * PAGE_SIZE;
+  const visible = filtered.slice(start, start + PAGE_SIZE);
+
+  function onFilter(value: string) {
+    setQ(value);
+    setPage(0);
+  }
 
   return (
     <div className="space-y-4">
@@ -37,7 +53,7 @@ export function ResourceTable({
       <Input
         placeholder={`Filter ${title.toLowerCase()}…`}
         value={q}
-        onChange={(e) => setQ(e.target.value)}
+        onChange={(e) => onFilter(e.target.value)}
         className="max-w-xs"
       />
 
@@ -46,7 +62,7 @@ export function ResourceTable({
           <p className="p-4 text-sm text-muted">No matching items.</p>
         ) : (
           <ul className="divide-y divide-border">
-            {filtered.map((name) => (
+            {visible.map((name) => (
               <li key={name}>
                 <Link
                   href={`${basePath}/${encodeURIComponent(name)}`}
@@ -59,9 +75,38 @@ export function ResourceTable({
           </ul>
         )}
       </div>
-      <p className="text-xs text-muted">
-        {filtered.length} of {names.length}
-      </p>
+
+      <div className="flex items-center justify-between text-xs text-muted">
+        <span>
+          {filtered.length === 0
+            ? `0 of ${names.length}`
+            : `${start + 1}–${start + visible.length} of ${filtered.length}` +
+              (filtered.length === names.length ? "" : ` (${names.length} total)`)}
+        </span>
+        {pageCount > 1 && (
+          <span className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => setPage(current - 1)}
+              disabled={current === 0}
+              aria-label="Previous page"
+            >
+              Prev
+            </Button>
+            <span>
+              {current + 1} / {pageCount}
+            </span>
+            <Button
+              variant="secondary"
+              onClick={() => setPage(current + 1)}
+              disabled={current >= pageCount - 1}
+              aria-label="Next page"
+            >
+              Next
+            </Button>
+          </span>
+        )}
+      </div>
     </div>
   );
 }
