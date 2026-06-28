@@ -27,6 +27,7 @@ export default async function NewRole({
       backHref={base}
       onCreate={createRole.bind(null, org)}
       initialJson={initialJson}
+      nameKind="role"
     />
   );
 }

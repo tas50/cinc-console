@@ -6,6 +6,7 @@ import Link from "next/link";
 import { JsonEditor } from "./json-editor";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { nameError, type NameKind } from "@/lib/cinc/names";
 import type { ActionResult } from "@/lib/cinc/action";
 
 function explain(error: string): string {
@@ -24,11 +25,14 @@ export function NewObjectForm({
   onCreate,
   backHref,
   initialJson,
+  nameKind,
 }: {
   title: string;
   onCreate: (name: string, json: string) => Promise<ActionResult>;
   backHref: string;
   initialJson: string;
+  /** When set, the name is validated against Chef's rules for this object. */
+  nameKind?: NameKind;
 }) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -36,6 +40,8 @@ export function NewObjectForm({
   const [valid, setValid] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const nameErr = nameKind ? nameError(nameKind, name) : null;
 
   function create() {
     setError(null);
@@ -67,7 +73,14 @@ export function NewObjectForm({
           onChange={(e) => setName(e.target.value)}
           className="max-w-xs"
           autoFocus
+          aria-invalid={nameErr ? true : undefined}
+          aria-describedby={nameErr ? "name-error" : undefined}
         />
+        {nameErr && (
+          <p id="name-error" role="alert" className="text-sm text-danger">
+            {nameErr}
+          </p>
+        )}
       </div>
 
       <JsonEditor value={json} onChange={setJson} onValidityChange={setValid} rows={16} />
@@ -78,7 +91,7 @@ export function NewObjectForm({
         </p>
       )}
 
-      <Button onClick={create} disabled={pending || !valid || !name}>
+      <Button onClick={create} disabled={pending || !valid || !name.trim() || !!nameErr}>
         {pending ? "Creating…" : "Create"}
       </Button>
     </div>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { nameError } from "@/lib/cinc/names";
 import type { ActionResult } from "@/lib/cinc/action";
 
 function explain(error: string): string {
@@ -29,6 +30,8 @@ export function NewBagForm({
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const nameErr = nameError("data_bag", name);
 
   function create() {
     setError(null);
@@ -63,7 +66,14 @@ export function NewBagForm({
           onChange={(e) => setName(e.target.value)}
           className="max-w-xs"
           autoFocus
+          aria-invalid={nameErr ? true : undefined}
+          aria-describedby={nameErr ? "name-error" : undefined}
         />
+        {nameErr && (
+          <p id="name-error" role="alert" className="text-sm text-danger">
+            {nameErr}
+          </p>
+        )}
       </div>
 
       {error && (
@@ -72,7 +82,7 @@ export function NewBagForm({
         </p>
       )}
 
-      <Button onClick={create} disabled={pending || !name}>
+      <Button onClick={create} disabled={pending || !name.trim() || !!nameErr}>
         {pending ? "Creating…" : "Create"}
       </Button>
     </div>

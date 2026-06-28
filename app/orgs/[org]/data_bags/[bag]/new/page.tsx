@@ -16,6 +16,7 @@ export default async function NewDataBagItem({
       backHref={base}
       onCreate={createItem.bind(null, org, bag)}
       initialJson={initialJson}
+      nameKind="data_bag_item"
     />
   );
 }

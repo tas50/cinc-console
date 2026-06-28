@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { nameError } from "@/lib/cinc/names";
 import type { CreateClientResult } from "../actions";
 
 function explain(error: string): string {
@@ -28,6 +29,8 @@ export function NewClientForm({
   );
   const [copied, setCopied] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  const nameErr = nameError("client", name);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -129,7 +132,14 @@ export function NewClientForm({
           onChange={(e) => setName(e.target.value)}
           className="max-w-xs"
           autoFocus
+          aria-invalid={nameErr ? true : undefined}
+          aria-describedby={nameErr ? "client-name-error" : undefined}
         />
+        {nameErr && (
+          <p id="client-name-error" role="alert" className="text-sm text-danger">
+            {nameErr}
+          </p>
+        )}
       </div>
 
       {error && (
@@ -138,7 +148,7 @@ export function NewClientForm({
         </p>
       )}
 
-      <Button type="submit" disabled={pending || !name.trim()}>
+      <Button type="submit" disabled={pending || !name.trim() || !!nameErr}>
         {pending ? "Creating…" : "Create client"}
       </Button>
     </form>
