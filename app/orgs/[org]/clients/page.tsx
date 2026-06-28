@@ -19,6 +19,8 @@ export default async function ClientsPage({
       title="Clients"
       names={Object.keys(res.data)}
       basePath={`/orgs/${org}/clients`}
+      createHref={`/orgs/${org}/clients/new`}
+      emptyHint="Clients are non-human API identities (e.g. a node's chef-client)."
     />
   );
 }
