@@ -4,13 +4,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Org } from "@/lib/cinc/orgs";
 import { NAV } from "@/lib/nav";
+import { searchOrgObjects, type PaletteObject } from "@/lib/palette-search";
 
 type Command = { id: string; label: string; hint?: string; href: string };
 
 /**
  * ⌘K / Ctrl-K command palette: a keyboard-first jump to any section of the
- * current org, any org, or your profile. Filter by typing, arrow keys to move,
- * Enter to go, Escape to close.
+ * current org, any org, or your profile — and, once you start typing, to any
+ * node / role / environment / policy by name (lazily fetched on first open).
+ * Filter by typing, arrow keys to move, Enter to go, Escape to close.
  *
  * Accessibility: a labelled modal dialog with the combobox/listbox pattern —
  * the input owns aria-activedescendant, options are aria-selected, and focus is
@@ -21,8 +23,10 @@ export function CommandPalette({ org, orgs }: { org: string; orgs: Org[] }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [rawActive, setActive] = useState(0);
+  const [objects, setObjects] = useState<PaletteObject[] | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const restoreFocus = useRef<HTMLElement | null>(null);
+  const loadedOrg = useRef<string | null>(null);
 
   function openPalette() {
     setQuery("");
@@ -30,7 +34,8 @@ export function CommandPalette({ org, orgs }: { org: string; orgs: Org[] }) {
     setOpen(true);
   }
 
-  const commands = useMemo<Command[]>(() => {
+  // Quick navigation commands — always available, shown by default.
+  const baseCommands = useMemo<Command[]>(() => {
     const sections: Command[] = NAV.map((n) => ({
       id: `nav-${n.slug}`,
       label: n.label,
@@ -54,11 +59,28 @@ export function CommandPalette({ org, orgs }: { org: string; orgs: Org[] }) {
     return [...sections, ...orgCmds, profile];
   }, [org, orgs]);
 
+  // Jump-to-object commands from the lazily-fetched name lists.
+  const objectCommands = useMemo<Command[]>(
+    () =>
+      (objects ?? []).map((o) => ({
+        id: `obj-${o.kind}-${o.name}`,
+        label: o.name,
+        hint: o.label,
+        href: `/orgs/${org}/${o.kind}/${encodeURIComponent(o.name)}`,
+      })),
+    [objects, org],
+  );
+
+  // Objects only appear once you type, to keep the default view tidy.
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return commands;
-    return commands.filter((c) => c.label.toLowerCase().includes(q));
-  }, [commands, query]);
+    if (!q) return baseCommands;
+    return [...baseCommands, ...objectCommands].filter((c) =>
+      c.label.toLowerCase().includes(q),
+    );
+  }, [baseCommands, objectCommands, query]);
+
+  const loadingObjects = open && query.trim() !== "" && objects === null;
 
   // Derive the active index (clamped to the current results) rather than syncing
   // it from an effect — the result set shrinks as you type.
@@ -85,6 +107,20 @@ export function CommandPalette({ org, orgs }: { org: string; orgs: Org[] }) {
     inputRef.current?.focus();
     return () => restoreFocus.current?.focus();
   }, [open]);
+
+  // Lazily load the org's object names on first open (refetch when org changes).
+  useEffect(() => {
+    if (!open || loadedOrg.current === org) return;
+    let cancelled = false;
+    searchOrgObjects(org).then((objs) => {
+      if (cancelled) return;
+      loadedOrg.current = org;
+      setObjects(objs);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, org]);
 
   function run(cmd: Command | undefined) {
     if (!cmd) return;
@@ -133,6 +169,7 @@ export function CommandPalette({ org, orgs }: { org: string; orgs: Org[] }) {
           active={active}
           setActive={setActive}
           results={results}
+          loading={loadingObjects}
           onKeyDown={onKeyDown}
           run={run}
           close={() => setOpen(false)}
@@ -149,6 +186,7 @@ function CommandPaletteOverlay({
   active,
   setActive,
   results,
+  loading,
   onKeyDown,
   run,
   close,
@@ -159,6 +197,7 @@ function CommandPaletteOverlay({
   active: number;
   setActive: (i: number) => void;
   results: Command[];
+  loading: boolean;
   onKeyDown: (e: React.KeyboardEvent) => void;
   run: (cmd: Command | undefined) => void;
   close: () => void;
@@ -192,7 +231,9 @@ function CommandPaletteOverlay({
         />
         <ul id="command-results" role="listbox" className="max-h-80 overflow-auto p-1">
           {results.length === 0 ? (
-            <li className="px-3 py-2 text-sm text-muted">No matches.</li>
+            <li className="px-3 py-2 text-sm text-muted">
+              {loading ? "Searching objects…" : "No matches."}
+            </li>
           ) : (
             results.map((cmd, i) => (
               <li
