@@ -29,8 +29,14 @@ test("authenticated user on /login is sent to a safe from target", () => {
   expect(new URL(location(res)!).pathname).toBe("/orgs/acme/roles");
 });
 
-test("an off-site from is ignored (no open redirect)", () => {
-  const res = proxy(req("/login?from=//evil.com", { session: true }));
+test.each([
+  "//evil.com",
+  "/\\evil.com", // browsers can normalize "/\" to "//"
+  "https://evil.com",
+])("an off-site from (%s) is ignored (no open redirect)", (from) => {
+  const res = proxy(
+    req(`/login?from=${encodeURIComponent(from)}`, { session: true }),
+  );
   expect(new URL(location(res)!).pathname).toBe("/orgs");
 });
 

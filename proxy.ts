@@ -2,6 +2,7 @@
 // cookie that gates the app. The real authorization is the cinc server's ACLs;
 // this only keeps unauthenticated users out of the UI shell.
 import { NextRequest, NextResponse } from "next/server";
+import { isInternalPath } from "@/lib/safe-redirect";
 
 export function proxy(request: NextRequest) {
   const hasSession = request.cookies.has("cinc_console");
@@ -21,13 +22,10 @@ export function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-/**
- * The `from` query param, but only when it's an internal absolute path — guards
- * against an open redirect (`//evil.com`, `https://…`).
- */
+/** The `from` query param, but only when it's a safe in-app path. */
 function safeFrom(request: NextRequest): string | null {
   const from = request.nextUrl.searchParams.get("from");
-  return from && from.startsWith("/") && !from.startsWith("//") ? from : null;
+  return isInternalPath(from) ? from : null;
 }
 
 export const config = {

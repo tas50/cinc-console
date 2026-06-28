@@ -5,13 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { isInternalPath } from "@/lib/safe-redirect";
 
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  // Return to where the session expired, but only to an internal path.
+  // Return to where the session expired, but only to a safe in-app path.
   const from = params.get("from");
-  const dest = from && from.startsWith("/") && !from.startsWith("//") ? from : "/orgs";
+  const dest = isInternalPath(from) ? from : "/orgs";
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
