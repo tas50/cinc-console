@@ -1,0 +1,215 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { Org } from "@/lib/cinc/orgs";
+import { NAV } from "@/lib/nav";
+
+type Command = { id: string; label: string; hint?: string; href: string };
+
+/**
+ * ⌘K / Ctrl-K command palette: a keyboard-first jump to any section of the
+ * current org, any org, or your profile. Filter by typing, arrow keys to move,
+ * Enter to go, Escape to close.
+ *
+ * Accessibility: a labelled modal dialog with the combobox/listbox pattern —
+ * the input owns aria-activedescendant, options are aria-selected, and focus is
+ * trapped to the input (the only focusable control) and restored on close.
+ */
+export function CommandPalette({ org, orgs }: { org: string; orgs: Org[] }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [rawActive, setActive] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const restoreFocus = useRef<HTMLElement | null>(null);
+
+  function openPalette() {
+    setQuery("");
+    setActive(0);
+    setOpen(true);
+  }
+
+  const commands = useMemo<Command[]>(() => {
+    const sections: Command[] = NAV.map((n) => ({
+      id: `nav-${n.slug}`,
+      label: n.label,
+      hint: "Section",
+      href: `/orgs/${org}/${n.slug}`,
+    }));
+    const orgCmds: Command[] = orgs
+      .filter((o) => o.name !== org)
+      .map((o) => ({
+        id: `org-${o.name}`,
+        label: `Switch to ${o.full_name ?? o.name}`,
+        hint: "Organization",
+        href: `/orgs/${o.name}`,
+      }));
+    const profile: Command = {
+      id: "profile",
+      label: "Profile",
+      hint: "Account",
+      href: "/profile",
+    };
+    return [...sections, ...orgCmds, profile];
+  }, [org, orgs]);
+
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return commands;
+    return commands.filter((c) => c.label.toLowerCase().includes(q));
+  }, [commands, query]);
+
+  // Derive the active index (clamped to the current results) rather than syncing
+  // it from an effect — the result set shrinks as you type.
+  const active = results.length ? Math.min(rawActive, results.length - 1) : 0;
+
+  // Global open shortcut: ⌘K / Ctrl-K. Reset on every toggle (harmless on close).
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setQuery("");
+        setActive(0);
+        setOpen((v) => !v);
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Focus the input on open and restore focus to the trigger on close (DOM only).
+  useEffect(() => {
+    if (!open) return;
+    restoreFocus.current = document.activeElement as HTMLElement | null;
+    inputRef.current?.focus();
+    return () => restoreFocus.current?.focus();
+  }, [open]);
+
+  function run(cmd: Command | undefined) {
+    if (!cmd) return;
+    setOpen(false);
+    router.push(cmd.href);
+  }
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Escape") {
+      setOpen(false);
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive(results.length ? (active + 1) % results.length : 0);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive(results.length ? (active - 1 + results.length) % results.length : 0);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      run(results[active]);
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={openPalette}
+        aria-keyshortcuts="Meta+K Control+K"
+        aria-label="Open command palette (Command-K)"
+        className="inline-flex items-center gap-2 rounded-md border border-border bg-bg px-2 py-1 text-xs text-muted hover:border-muted hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      >
+        <span>Jump to…</span>
+        <kbd className="rounded border border-border bg-surface px-1 font-sans">
+          ⌘K
+        </kbd>
+      </button>
+      {open && (
+        <CommandPaletteOverlay
+          inputRef={inputRef}
+          query={query}
+          setQuery={setQuery}
+          active={active}
+          setActive={setActive}
+          results={results}
+          onKeyDown={onKeyDown}
+          run={run}
+          close={() => setOpen(false)}
+        />
+      )}
+    </>
+  );
+}
+
+function CommandPaletteOverlay({
+  inputRef,
+  query,
+  setQuery,
+  active,
+  setActive,
+  results,
+  onKeyDown,
+  run,
+  close,
+}: {
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  query: string;
+  setQuery: (v: string) => void;
+  active: number;
+  setActive: (i: number) => void;
+  results: Command[];
+  onKeyDown: (e: React.KeyboardEvent) => void;
+  run: (cmd: Command | undefined) => void;
+  close: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[12vh]">
+      <div
+        className="absolute inset-0 bg-black/60"
+        aria-hidden="true"
+        onClick={close}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command palette"
+        className="relative z-10 w-full max-w-lg overflow-hidden rounded-lg border border-border bg-surface shadow-xl"
+      >
+        <input
+          ref={inputRef}
+          type="text"
+          role="combobox"
+          aria-expanded="true"
+          aria-controls="command-results"
+          aria-activedescendant={results[active]?.id}
+          aria-label="Search commands"
+          placeholder="Jump to…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={onKeyDown}
+          className="w-full border-b border-border bg-transparent px-4 py-3 text-sm text-text placeholder:text-muted focus-visible:outline-none"
+        />
+        <ul id="command-results" role="listbox" className="max-h-80 overflow-auto p-1">
+          {results.length === 0 ? (
+            <li className="px-3 py-2 text-sm text-muted">No matches.</li>
+          ) : (
+            results.map((cmd, i) => (
+              <li
+                key={cmd.id}
+                id={cmd.id}
+                role="option"
+                aria-selected={i === active}
+                onMouseEnter={() => setActive(i)}
+                onClick={() => run(cmd)}
+                className={
+                  "flex cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm " +
+                  (i === active ? "bg-surface-2 text-text" : "text-muted")
+                }
+              >
+                <span>{cmd.label}</span>
+                {cmd.hint && <span className="text-xs text-muted">{cmd.hint}</span>}
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
+    </div>
+  );
+}

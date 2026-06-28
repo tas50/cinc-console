@@ -8,17 +8,8 @@ import { cn } from "@/lib/utils";
 import type { Org } from "@/lib/cinc/orgs";
 import { OrgSwitcher } from "@/components/org-switcher";
 import { UserMenu } from "@/components/user-menu";
-
-const NAV: { label: string; slug: string }[] = [
-  { label: "Nodes", slug: "nodes" },
-  { label: "Roles", slug: "roles" },
-  { label: "Environments", slug: "environments" },
-  { label: "Data Bags", slug: "data_bags" },
-  { label: "Members", slug: "members" },
-  { label: "Cookbooks", slug: "cookbooks" },
-  { label: "Policies", slug: "policies" },
-  { label: "Clients", slug: "clients" },
-];
+import { CommandPalette } from "@/components/command-palette";
+import { NAV } from "@/lib/nav";
 
 export function AppShell({
   org,
@@ -62,7 +53,12 @@ export function AppShell({
           </Link>
           <OrgSwitcher orgs={orgs} />
         </div>
-        <UserMenu name={displayName} />
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:block">
+            <CommandPalette org={org} orgs={orgs} />
+          </div>
+          <UserMenu name={displayName} />
+        </div>
       </header>
 
       <div className="flex flex-1 flex-col md:flex-row">
