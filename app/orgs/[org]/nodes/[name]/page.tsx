@@ -35,6 +35,7 @@ export default async function NodeDetail({
         <NodeDetails
           data={res.data}
           onSaveRunList={saveNode.bind(null, org, name)}
+          onSaveTags={saveNode.bind(null, org, name)}
         />
       }
       backHref={base}
