@@ -9,6 +9,7 @@ import type { Org } from "@/lib/cinc/orgs";
 import { OrgSwitcher } from "@/components/org-switcher";
 import { UserMenu } from "@/components/user-menu";
 import { CommandPalette } from "@/components/command-palette";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { NAV } from "@/lib/nav";
 
 export function AppShell({
@@ -92,6 +93,7 @@ export function AppShell({
         </nav>
 
         <main id="main-content" tabIndex={-1} className="flex-1 p-4 md:p-6">
+          <Breadcrumbs />
           {children}
         </main>
       </div>
