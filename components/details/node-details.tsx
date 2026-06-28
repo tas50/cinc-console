@@ -9,6 +9,8 @@ import {
 } from "./primitives";
 import { AttributeTree } from "./attribute-tree";
 import { JsonTree } from "./json-tree";
+import { RunListEditor } from "./run-list-editor";
+import type { ActionResult } from "@/lib/cinc/action";
 
 /** The node's reported platform (`automatic.platform`), if any. */
 export function nodePlatform(data: unknown): unknown {
@@ -30,7 +32,14 @@ function platformText(auto: Record<string, unknown>): string | null {
  * the run list and tags, then each attribute precedence level as a tree.
  * Automatic attributes start collapsed — they are large and machine-generated.
  */
-export function NodeDetails({ data }: { data: unknown }) {
+export function NodeDetails({
+  data,
+  onSaveRunList,
+}: {
+  data: unknown;
+  /** When provided, the run list becomes editable and saves via this action. */
+  onSaveRunList?: (json: string) => Promise<ActionResult>;
+}) {
   const node = isRecord(data) ? data : {};
   const automatic = isRecord(node.automatic) ? node.automatic : {};
   const normal = isRecord(node.normal) ? node.normal : {};
@@ -58,7 +67,11 @@ export function NodeDetails({ data }: { data: unknown }) {
       </DetailSection>
 
       <DetailSection title="Run list">
-        <RunList items={node.run_list} />
+        {onSaveRunList ? (
+          <RunListEditor data={node} onSave={onSaveRunList} />
+        ) : (
+          <RunList items={node.run_list} />
+        )}
       </DetailSection>
 
       <DetailSection title="Tags">
