@@ -58,7 +58,7 @@ export function NewObjectForm({
       <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
 
       <div className="space-y-1">
-        <label htmlFor="name" className="text-sm text-muted">
+        <label htmlFor="name" className="block text-sm text-muted">
           Name
         </label>
         <Input

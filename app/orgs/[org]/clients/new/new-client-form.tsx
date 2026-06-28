@@ -120,7 +120,7 @@ export function NewClientForm({
       <h1 className="text-xl font-semibold tracking-tight">New client</h1>
 
       <div className="space-y-1">
-        <label htmlFor="client-name" className="text-sm text-muted">
+        <label htmlFor="client-name" className="block text-sm text-muted">
           Name
         </label>
         <Input
