@@ -89,10 +89,10 @@ describe("ClientDetails", () => {
 });
 
 describe("DataBagItemDetails", () => {
-  it("shows the id and the remaining contents", () => {
+  it("shows the contents without repeating the id (already the page title)", () => {
     render(<DataBagItemDetails data={{ id: "secret", password: "p@ss" }} />);
-    expect(screen.getByText("secret")).toBeInTheDocument();
     expect(screen.getByText("p@ss")).toBeInTheDocument();
+    expect(screen.queryByText("secret")).not.toBeInTheDocument();
   });
 });
 
