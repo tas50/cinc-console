@@ -5,13 +5,17 @@ import { CincError } from "@/lib/cinc/errors";
 
 vi.mock("@/lib/session", () => ({ requireUser: async () => "alice" }));
 
-const { createClient } = vi.hoisted(() => ({ createClient: vi.fn() }));
-vi.mock("@/lib/cinc/clients", () => ({ createClient }));
+const { createClient, deleteClient } = vi.hoisted(() => ({
+  createClient: vi.fn(),
+  deleteClient: vi.fn(),
+}));
+vi.mock("@/lib/cinc/clients", () => ({ createClient, deleteClient }));
 
-import { createClientAction } from "./actions";
+import { createClientAction, deleteClientAction } from "./actions";
 
 beforeEach(() => {
   createClient.mockReset();
+  deleteClient.mockReset();
   vi.mocked(revalidatePath).mockClear();
 });
 
@@ -36,6 +40,20 @@ test("maps a name conflict to a friendly error and does not revalidate", async (
 test("maps 403 to forbidden", async () => {
   createClient.mockRejectedValueOnce(new CincError(403, "denied"));
   await expect(createClientAction("acme", "ci")).resolves.toEqual({
+    error: "forbidden",
+  });
+});
+
+test("deleteClientAction removes the client and revalidates", async () => {
+  deleteClient.mockResolvedValueOnce(undefined);
+  await expect(deleteClientAction("acme", "ci")).resolves.toEqual({ ok: true });
+  expect(deleteClient).toHaveBeenCalledWith("alice", "acme", "ci");
+  expect(revalidatePath).toHaveBeenCalledWith("/orgs/acme/clients", "layout");
+});
+
+test("deleteClientAction maps 403 to forbidden", async () => {
+  deleteClient.mockRejectedValueOnce(new CincError(403, "denied"));
+  await expect(deleteClientAction("acme", "ci")).resolves.toEqual({
     error: "forbidden",
   });
 });
