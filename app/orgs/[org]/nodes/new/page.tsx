@@ -19,6 +19,7 @@ export default async function NewNode({
       backHref={base}
       onCreate={createNode.bind(null, org)}
       initialJson={initialJson}
+      nameKind="node"
     />
   );
 }

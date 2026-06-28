@@ -27,6 +27,7 @@ export default async function NewEnvironment({
       backHref={base}
       onCreate={createEnvironment.bind(null, org)}
       initialJson={initialJson}
+      nameKind="environment"
     />
   );
 }
