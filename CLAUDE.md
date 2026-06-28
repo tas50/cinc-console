@@ -72,8 +72,10 @@ permission" (it never substitutes its own check).
   `runAction`/`parseJsonObject`, list/detail/new pages, server actions bound with
   `.bind(null, org, name)` and passed to `ObjectEditor`/`NewObjectForm`.
 - **Mutations return `{ ok: true } | { error: string }`** via `runAction`.
-- v1 scope: nodes/roles/environments/data bags/members = CRUD;
-  cookbooks/policies/clients = read-only. `_default` environment is read-only.
+- v1 scope: nodes/roles/environments/data bags/members & groups = CRUD;
+  clients = create + delete (no edit); cookbooks/policies = view + delete
+  (a version/revision or the whole object). Editing cookbook/policy content
+  and cookbook uploads are out of scope. `_default` environment is read-only.
 
 ## Accessibility
 
