@@ -57,9 +57,11 @@ export function AppShell({
         <UserMenu name={displayName} />
       </header>
 
-      <div className="flex flex-1">
-        <nav className="w-48 shrink-0 border-r border-border bg-surface p-3">
-          <ul className="space-y-1">
+      <div className="flex flex-1 flex-col md:flex-row">
+        {/* On mobile the nav is a horizontal, scrollable strip under the header;
+            from md it becomes the fixed left rail. */}
+        <nav className="shrink-0 overflow-x-auto border-b border-border bg-surface p-3 md:w-48 md:overflow-x-visible md:border-b-0 md:border-r">
+          <ul className="flex gap-1 md:flex-col md:space-y-1">
             {NAV.map((item) => {
               const href = `${base}/${item.slug}`;
               const active = pathname.startsWith(href);
@@ -68,7 +70,7 @@ export function AppShell({
                   <Link
                     href={href}
                     className={cn(
-                      "block rounded-md px-3 py-2 text-sm transition-colors",
+                      "block whitespace-nowrap rounded-md px-3 py-2 text-sm transition-colors",
                       active
                         ? "bg-surface-2 text-link font-medium"
                         : "text-muted hover:bg-surface-2 hover:text-text",
@@ -82,7 +84,7 @@ export function AppShell({
           </ul>
         </nav>
 
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6">{children}</main>
       </div>
     </div>
   );

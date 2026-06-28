@@ -9,6 +9,7 @@ import { Agent, setGlobalDispatcher } from "undici";
 import { getConfig } from "../config";
 import { signHeaders } from "./signing";
 import { CincError } from "./errors";
+import { log } from "../log";
 
 let dispatcherReady = false;
 
@@ -68,7 +69,18 @@ export async function cincRequest<T>(opts: CincRequestOptions): Promise<T> {
   });
   const text = await res.text();
   const parsed = text ? safeJson(text) : null;
-  if (!res.ok) throw new CincError(res.status, parsed ?? text);
+  if (!res.ok) {
+    // Audit trail of denied/failed server calls. Identifiers only — never the
+    // body (data bag items hold secrets) or headers (they carry the signature).
+    log[res.status >= 500 ? "error" : "warn"]("cinc.request_failed", {
+      user: opts.user,
+      org: opts.org,
+      method: opts.method,
+      path: fullPath,
+      status: res.status,
+    });
+    throw new CincError(res.status, parsed ?? text);
+  }
   return parsed as T;
 }
 
