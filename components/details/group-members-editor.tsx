@@ -8,13 +8,14 @@ import { DetailSection, EmptyState } from "./primitives";
 import type { ActionResult } from "@/lib/cinc/action";
 
 const CATEGORIES = [
-  { key: "users", label: "Users", placeholder: "username" },
-  { key: "clients", label: "Clients", placeholder: "client name" },
-  { key: "groups", label: "Groups", placeholder: "group name" },
+  { key: "users", label: "Users", noun: "user", placeholder: "username" },
+  { key: "clients", label: "Clients", noun: "client", placeholder: "client name" },
+  { key: "groups", label: "Groups", noun: "group", placeholder: "group name" },
 ] as const;
 
 type CategoryKey = (typeof CATEGORIES)[number]["key"];
 type Members = Record<CategoryKey, string[]>;
+export type GroupOptions = Partial<Record<CategoryKey, string[]>>;
 
 function arr(v: unknown): string[] {
   return Array.isArray(v) ? v.map(String) : [];
@@ -28,37 +29,52 @@ function PencilIcon() {
   );
 }
 
+/** A category heading, visually distinct from the section header above it. */
+function CategoryHeading({ label, count }: { label: string; count: number }) {
+  return (
+    <h3 className="text-sm font-medium text-text">
+      {label} <span className="font-normal text-muted">({count})</span>
+    </h3>
+  );
+}
+
 function MemberList({
   label,
+  noun,
   placeholder,
   items,
+  options,
   onChange,
   disabled,
 }: {
   label: string;
+  noun: string;
   placeholder: string;
   items: string[];
+  /** Valid values to choose from. When set, only these can be added. */
+  options?: string[];
   onChange: (next: string[]) => void;
   disabled: boolean;
 }) {
   const [entry, setEntry] = useState("");
+  const trimmed = entry.trim();
+  const listId = `group-${label.toLowerCase()}-options`;
+  const available = options?.filter((o) => !items.includes(o));
+  const invalid = !!options && trimmed !== "" && !options.includes(trimmed);
 
   function add(e: React.FormEvent) {
     e.preventDefault();
-    const v = entry.trim();
-    if (!v || items.includes(v)) {
-      setEntry("");
+    if (!trimmed || items.includes(trimmed) || invalid) {
+      if (items.includes(trimmed)) setEntry("");
       return;
     }
-    onChange([...items, v]);
+    onChange([...items, trimmed]);
     setEntry("");
   }
 
   return (
     <div className="space-y-2">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
-        {label}
-      </h3>
+      <CategoryHeading label={label} count={items.length} />
       {items.length === 0 ? (
         <EmptyState>None.</EmptyState>
       ) : (
@@ -88,13 +104,32 @@ function MemberList({
           onChange={(e) => setEntry(e.target.value)}
           placeholder={placeholder}
           aria-label={`Add to ${label}`}
+          list={available ? listId : undefined}
+          autoComplete="off"
           className="flex-1 font-mono text-xs"
           disabled={disabled}
         />
-        <Button type="submit" variant="secondary" disabled={disabled || !entry.trim()}>
+        {available && (
+          <datalist id={listId}>
+            {available.map((o) => (
+              <option key={o} value={o} />
+            ))}
+          </datalist>
+        )}
+        <Button
+          type="submit"
+          variant="secondary"
+          disabled={disabled || !trimmed || invalid}
+        >
           Add
         </Button>
       </form>
+      {invalid && (
+        <p className="text-xs text-muted">
+          No {noun} named <span className="font-mono">{trimmed}</span> in this
+          organization — pick one from the list.
+        </p>
+      )}
     </div>
   );
 }
@@ -102,16 +137,20 @@ function MemberList({
 /**
  * Structured membership editing for a group — users, clients, and nested
  * groups — without touching raw JSON. View-only by default with a corner Edit
- * control; editing reveals add/remove per category. Cancel reverts. Saving
- * merges the three lists back into the group object via the page's save action.
- * `actors` is server-derived and shown read-only elsewhere, so it isn't edited.
+ * control; editing reveals add/remove per category. When `options` are supplied
+ * a category only accepts valid values (with autocomplete), so you can't add a
+ * non-existent user. Cancel reverts. Saving merges the three lists back into the
+ * group object via the page's save action. `actors` is server-derived and shown
+ * read-only elsewhere, so it isn't edited.
  */
 export function GroupMembersEditor({
   data,
   onSave,
+  options,
 }: {
   data: Record<string, unknown>;
   onSave: (json: string) => Promise<ActionResult>;
+  options?: GroupOptions;
 }) {
   const router = useRouter();
   const initial: Members = {
@@ -161,7 +200,7 @@ export function GroupMembersEditor({
   if (!editing) {
     return (
       <DetailSection
-        title="Members"
+        title="Membership"
         action={
           <button
             type="button"
@@ -180,9 +219,7 @@ export function GroupMembersEditor({
         <div className="space-y-4">
           {CATEGORIES.map((c) => (
             <div key={c.key} className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
-                {c.label}
-              </h3>
+              <CategoryHeading label={c.label} count={members[c.key].length} />
               {members[c.key].length === 0 ? (
                 <EmptyState>None.</EmptyState>
               ) : (
@@ -210,14 +247,16 @@ export function GroupMembersEditor({
   }
 
   return (
-    <DetailSection title="Members">
-      <div className="space-y-4">
+    <DetailSection title="Membership">
+      <div className="space-y-5">
         {CATEGORIES.map((c) => (
           <MemberList
             key={c.key}
             label={c.label}
+            noun={c.noun}
             placeholder={c.placeholder}
             items={members[c.key]}
+            options={options?.[c.key]}
             disabled={pending}
             onChange={(next) => setMembers({ ...members, [c.key]: next })}
           />
@@ -230,7 +269,7 @@ export function GroupMembersEditor({
         </p>
       )}
 
-      <div className="flex items-center gap-2">
+      <div className="mt-4 flex items-center gap-2">
         <Button onClick={save} disabled={pending || !dirty}>
           {pending ? "Saving…" : "Save members"}
         </Button>

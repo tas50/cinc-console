@@ -1,9 +1,25 @@
 import { currentUser } from "@/lib/guard";
 import { members } from "@/lib/cinc/members";
+import { clients } from "@/lib/cinc/readonly";
 import { safeGet, explainRead } from "@/lib/cinc/safe-get";
 import { ObjectEditor } from "@/components/object-editor";
 import { GroupDetails } from "@/components/details/group-details";
 import { saveGroup, deleteGroup } from "../../actions";
+
+/** Valid users / clients / groups in the org, for the membership pickers. */
+async function memberOptions(user: string, org: string, self: string) {
+  const [users, clientMap, groupMap] = await Promise.all([
+    members.listUsers(user, org).catch(() => []),
+    clients.list(user, org).catch(() => ({})),
+    members.listGroups(user, org).catch(() => ({})),
+  ]);
+  return {
+    users: users.map((u) => u.user.username),
+    clients: Object.keys(clientMap),
+    // a group can't contain itself
+    groups: Object.keys(groupMap).filter((g) => g !== self),
+  };
+}
 
 export default async function GroupDetail({
   params,
@@ -18,6 +34,7 @@ export default async function GroupDetail({
   if ("error" in res) {
     return <p className="text-sm text-danger">{explainRead(res.error)}</p>;
   }
+  const options = await memberOptions(user, org, name);
   return (
     <ObjectEditor
       name={name}
@@ -26,6 +43,7 @@ export default async function GroupDetail({
         <GroupDetails
           data={res.data}
           onSaveMembers={saveGroup.bind(null, org, name)}
+          options={options}
         />
       }
       backHref={base}

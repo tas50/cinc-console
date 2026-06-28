@@ -1,27 +1,30 @@
 import { DetailSection, Chips, isRecord } from "./primitives";
-import { GroupMembersEditor } from "./group-members-editor";
+import { GroupMembersEditor, type GroupOptions } from "./group-members-editor";
 import type { ActionResult } from "@/lib/cinc/action";
 
 /**
- * Curated view of a group: its member users, clients, and nested groups, plus
- * the server-computed `actors` union. When a save action is supplied the
- * membership becomes editable (without raw JSON); `actors` stays read-only
- * since the server derives it.
+ * Curated view of a group: its membership (users, clients, nested groups) and
+ * the server-computed effective-members union. When a save action is supplied
+ * the membership becomes editable (without raw JSON); the effective members
+ * stay read-only since the server derives them by expanding nested groups.
  */
 export function GroupDetails({
   data,
   onSaveMembers,
+  options,
 }: {
   data: unknown;
   /** When provided, group membership becomes editable and saves via this action. */
   onSaveMembers?: (json: string) => Promise<ActionResult>;
+  /** Valid users/clients/groups to choose from when editing. */
+  options?: GroupOptions;
 }) {
   const group = isRecord(data) ? data : {};
 
   return (
     <div className="space-y-4">
       {onSaveMembers ? (
-        <GroupMembersEditor data={group} onSave={onSaveMembers} />
+        <GroupMembersEditor data={group} onSave={onSaveMembers} options={options} />
       ) : (
         <>
           <DetailSection title="Users">
@@ -38,8 +41,12 @@ export function GroupDetails({
         </>
       )}
 
-      <DetailSection title="Actors">
-        <Chips items={group.actors} mono empty="No actors." />
+      <DetailSection title="Effective members">
+        <p className="mb-2 text-xs text-muted">
+          Everyone the membership above resolves to, with nested groups expanded
+          (computed by the server).
+        </p>
+        <Chips items={group.actors} mono empty="No members." />
       </DetailSection>
     </div>
   );

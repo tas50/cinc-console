@@ -19,6 +19,32 @@ const data = {
 const enterEdit = () =>
   userEvent.click(screen.getByRole("button", { name: /edit members/i }));
 
+test("only valid options can be added when options are provided", async () => {
+  render(
+    <GroupMembersEditor
+      data={data}
+      onSave={onSave}
+      options={{ users: ["alice", "carol"] }}
+    />,
+  );
+  await enterEdit();
+  const field = screen.getByLabelText("Add to Users");
+  const addUsers = () => screen.getAllByRole("button", { name: "Add" })[0];
+
+  // An unknown user can't be added — Add stays disabled and a hint shows.
+  await userEvent.type(field, "mallory");
+  expect(addUsers()).toBeDisabled();
+  expect(screen.getByText(/pick one from the list/i)).toBeInTheDocument();
+
+  // A valid user can be added and saved.
+  await userEvent.clear(field);
+  await userEvent.type(field, "carol");
+  expect(addUsers()).toBeEnabled();
+  await userEvent.click(addUsers());
+  await userEvent.click(screen.getByRole("button", { name: "Save members" }));
+  expect(JSON.parse(onSave.mock.calls[0][0]).users).toEqual(["alice", "carol"]);
+});
+
 test("is view-only until Edit is chosen", () => {
   render(<GroupMembersEditor data={data} onSave={onSave} />);
   expect(screen.queryByLabelText("Add to Users")).not.toBeInTheDocument();
