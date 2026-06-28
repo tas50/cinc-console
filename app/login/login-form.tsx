@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 
 export function LoginForm() {
   const router = useRouter();
+  const params = useSearchParams();
+  // Return to where the session expired, but only to an internal path.
+  const from = params.get("from");
+  const dest = from && from.startsWith("/") && !from.startsWith("//") ? from : "/orgs";
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +28,7 @@ export function LoginForm() {
         body: JSON.stringify({ username, password }),
       });
       if (res.ok) {
-        router.push("/orgs");
+        router.push(dest);
         router.refresh();
         return;
       }
