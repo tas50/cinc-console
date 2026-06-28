@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useTransition, type ReactNode } from "react";
+import { useMemo, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { JsonEditor } from "./json-editor";
 import { Button } from "./ui/button";
+import { ConfirmDialog } from "./ui/confirm-dialog";
+import { JsonDiffView } from "./json-diff-view";
+import { diffJson } from "@/lib/json-diff";
 import type { ActionResult } from "@/lib/cinc/action";
 
 function explain(error: string): string {
@@ -50,15 +53,37 @@ export function ObjectEditor({
     null,
   );
   const [pending, startTransition] = useTransition();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmSave, setConfirmSave] = useState(false);
   // Show the curated view first when we have one; JSON is the escape hatch.
   const [mode, setMode] = useState<"details" | "json">(
     details ? "details" : "json",
   );
   const showingJson = mode === "json" || !details;
 
-  function save() {
-    if (!onSave) return;
+  // What the current edit would change relative to the value on the server.
+  // null when the edited JSON doesn't parse (Save is disabled in that case).
+  const diff = useMemo(() => {
+    try {
+      return diffJson(JSON.parse(initialJson), JSON.parse(json));
+    } catch {
+      return null;
+    }
+  }, [initialJson, json]);
+
+  function requestSave() {
+    if (!onSave || !valid) return;
+    if (!diff || diff.length === 0) {
+      setStatus({ kind: "ok", text: "No changes to save." });
+      return;
+    }
     setStatus(null);
+    setConfirmSave(true);
+  }
+
+  function save() {
+    setConfirmSave(false);
+    if (!onSave) return;
     startTransition(async () => {
       const res = await onSave(json);
       if ("ok" in res) {
@@ -71,8 +96,8 @@ export function ObjectEditor({
   }
 
   function remove() {
+    setConfirmDelete(false);
     if (!onDelete) return;
-    if (!confirm(`Delete ${name}? This cannot be undone.`)) return;
     setStatus(null);
     startTransition(async () => {
       const res = await onDelete();
@@ -107,12 +132,16 @@ export function ObjectEditor({
             </Button>
           )}
           {!readOnly && onDelete && (
-            <Button variant="danger" onClick={remove} disabled={pending}>
+            <Button
+              variant="danger"
+              onClick={() => setConfirmDelete(true)}
+              disabled={pending}
+            >
               Delete
             </Button>
           )}
           {!readOnly && onSave && showingJson && (
-            <Button onClick={save} disabled={pending || !valid}>
+            <Button onClick={requestSave} disabled={pending || !valid}>
               {pending ? "Saving…" : "Save"}
             </Button>
           )}
@@ -138,6 +167,31 @@ export function ObjectEditor({
       ) : (
         details
       )}
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title={`Delete ${name}?`}
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        onConfirm={remove}
+        onCancel={() => setConfirmDelete(false)}
+      >
+        This permanently deletes <span className="font-mono">{name}</span> from
+        the server. This cannot be undone.
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirmSave}
+        title="Apply changes?"
+        confirmLabel="Apply"
+        onConfirm={save}
+        onCancel={() => setConfirmSave(false)}
+      >
+        <p className="mb-2">
+          Review what will change on the server before saving:
+        </p>
+        {diff && <JsonDiffView lines={diff} />}
+      </ConfirmDialog>
     </div>
   );
 }
