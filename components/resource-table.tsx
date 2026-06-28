@@ -4,6 +4,7 @@ import { useState, useMemo, type ReactNode } from "react";
 import Link from "next/link";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { PageHeader } from "./ui/page-header";
 
 /** Rows rendered per page. The Cinc list call returns every name at once, so
  * this only bounds the DOM — it keeps large orgs (thousands of nodes) snappy. */
@@ -44,14 +45,16 @@ export function ResourceTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
-        {createHref && (
-          <Link href={createHref}>
-            <Button>New</Button>
-          </Link>
-        )}
-      </div>
+      <PageHeader
+        title={title}
+        actions={
+          createHref && (
+            <Link href={createHref}>
+              <Button>New</Button>
+            </Link>
+          )
+        }
+      />
 
       <Input
         placeholder={`Filter ${title.toLowerCase()}…`}
@@ -84,9 +87,12 @@ export function ResourceTable({
               <li key={name}>
                 <Link
                   href={`${basePath}/${encodeURIComponent(name)}`}
-                  className="block px-4 py-2 font-mono text-sm text-text hover:bg-surface-2"
+                  className="flex items-center justify-between gap-2 px-4 py-2.5 font-mono text-sm text-text transition-colors hover:bg-surface-2 hover:text-link"
                 >
-                  {name}
+                  <span className="truncate">{name}</span>
+                  <span aria-hidden="true" className="text-muted">
+                    →
+                  </span>
                 </Link>
               </li>
             ))}

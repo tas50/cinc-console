@@ -64,7 +64,7 @@ type Tone = "muted" | "success" | "primary" | "warn";
 const toneClass: Record<Tone, string> = {
   muted: "bg-surface-2 text-muted",
   success: "bg-success/15 text-success",
-  primary: "bg-primary/15 text-primary",
+  primary: "bg-primary/20 text-link",
   warn: "bg-warn/15 text-warn",
 };
 

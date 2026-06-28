@@ -8,7 +8,7 @@ const variants: Record<Variant, string> = {
     "bg-primary text-primary-foreground hover:bg-primary-hover font-medium",
   secondary:
     "bg-surface-2 text-text border border-border hover:border-muted",
-  danger: "bg-danger text-white hover:opacity-90 font-medium",
+  danger: "bg-danger-strong text-white hover:brightness-110 font-medium",
   ghost: "text-muted hover:text-text hover:bg-surface-2",
 };
 
