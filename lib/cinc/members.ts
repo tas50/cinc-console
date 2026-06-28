@@ -58,4 +58,11 @@ export const members = {
       path: `/groups/${group}`,
       body,
     }),
+  deleteGroup: (user: string, org: string, group: string) =>
+    cincRequest<unknown>({
+      user,
+      org,
+      method: "DELETE",
+      path: `/groups/${group}`,
+    }),
 };

@@ -36,3 +36,13 @@ export async function saveGroup(
     revalidate: `/orgs/${org}/members`,
   });
 }
+
+export async function deleteGroup(
+  org: string,
+  group: string,
+): Promise<ActionResult> {
+  const user = await requireUser();
+  return runAction(() => members.deleteGroup(user, org, group), {
+    revalidate: `/orgs/${org}/members`,
+  });
+}
