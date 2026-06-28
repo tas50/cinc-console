@@ -5,11 +5,16 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DetailSection, EmptyState, KeyValueTable, isRecord } from "./primitives";
+import { cn } from "@/lib/utils";
 import type { ActionResult } from "@/lib/cinc/action";
 
 // Chef cookbook version-constraint operators.
 const OPERATORS = ["=", ">=", "<=", "~>", ">", "<"];
-const VERSION_RE = /^\d+(\.\d+){0,2}$/; // x, x.y, or x.y.z
+// A constraint's version is parsed as a Chef::Version, which requires at least
+// major.minor — it matches `x.y.z` or `x.y` and rejects a bare `x` (or any
+// non-numeric junk). Mirror that here so the editor only allows what the server
+// will accept.
+const VERSION_RE = /^\d+\.\d+(\.\d+)?$/; // x.y or x.y.z
 
 type Row = { id: number; cookbook: string; op: string; version: string };
 
@@ -156,47 +161,60 @@ export function CookbookConstraintsEditor({
         <ul className="space-y-2">
           {rows.map((r) => {
             const badVersion = r.version.trim() !== "" && !VERSION_RE.test(r.version.trim());
+            const errorId = `version-error-${r.id}`;
             return (
-              <li key={r.id} className="flex flex-wrap items-center gap-2">
-                <Input
-                  aria-label="Cookbook"
-                  placeholder="cookbook"
-                  value={r.cookbook}
-                  onChange={(e) => update(r.id, { cookbook: e.target.value })}
-                  disabled={pending}
-                  className="w-40 font-mono text-xs"
-                />
-                <select
-                  aria-label="Operator"
-                  value={r.op}
-                  onChange={(e) => update(r.id, { op: e.target.value })}
-                  disabled={pending}
-                  className="rounded-md border border-border bg-bg px-2 py-2 font-mono text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                >
-                  {OPERATORS.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
-                    </option>
-                  ))}
-                </select>
-                <Input
-                  aria-label="Version"
-                  placeholder="1.0.0"
-                  value={r.version}
-                  onChange={(e) => update(r.id, { version: e.target.value })}
-                  disabled={pending}
-                  aria-invalid={badVersion ? true : undefined}
-                  className="w-28 font-mono text-xs"
-                />
-                <Button
-                  variant="ghost"
-                  className="px-2 text-danger hover:text-danger"
-                  aria-label={`Remove ${r.cookbook.trim() || "constraint"}`}
-                  disabled={pending}
-                  onClick={() => removeRow(r.id)}
-                >
-                  ✕
-                </Button>
+              <li key={r.id} className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Input
+                    aria-label="Cookbook"
+                    placeholder="cookbook"
+                    value={r.cookbook}
+                    onChange={(e) => update(r.id, { cookbook: e.target.value })}
+                    disabled={pending}
+                    className="min-w-0 flex-1 font-mono text-xs"
+                  />
+                  <select
+                    aria-label="Operator"
+                    value={r.op}
+                    onChange={(e) => update(r.id, { op: e.target.value })}
+                    disabled={pending}
+                    className="shrink-0 rounded-md border border-border bg-bg px-2 py-2 font-mono text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    {OPERATORS.map((o) => (
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
+                    ))}
+                  </select>
+                  <Input
+                    aria-label="Version"
+                    placeholder="1.0.0"
+                    value={r.version}
+                    onChange={(e) => update(r.id, { version: e.target.value })}
+                    disabled={pending}
+                    aria-invalid={badVersion ? true : undefined}
+                    aria-describedby={badVersion ? errorId : undefined}
+                    className={cn(
+                      "w-28 shrink-0 font-mono text-xs",
+                      badVersion && "border-danger focus-visible:ring-danger",
+                    )}
+                  />
+                  <Button
+                    variant="ghost"
+                    className="shrink-0 px-2 text-danger hover:text-danger"
+                    aria-label={`Remove ${r.cookbook.trim() || "constraint"}`}
+                    disabled={pending}
+                    onClick={() => removeRow(r.id)}
+                  >
+                    ✕
+                  </Button>
+                </div>
+                {badVersion && (
+                  <p id={errorId} role="alert" className="text-xs text-danger">
+                    Enter a version like <span className="font-mono">1.0</span> or{" "}
+                    <span className="font-mono">1.2.3</span>.
+                  </p>
+                )}
               </li>
             );
           })}
