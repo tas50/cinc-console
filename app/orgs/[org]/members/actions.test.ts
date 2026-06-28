@@ -4,21 +4,29 @@ import { CincError } from "@/lib/cinc/errors";
 
 vi.mock("@/lib/session", () => ({ requireUser: async () => "alice" }));
 
-const { invite, removeUser: removeUserFn, updateGroup } = vi.hoisted(() => ({
-  invite: vi.fn(),
-  removeUser: vi.fn(),
-  updateGroup: vi.fn(),
-}));
+const { invite, removeUser: removeUserFn, updateGroup, deleteGroupFn } =
+  vi.hoisted(() => ({
+    invite: vi.fn(),
+    removeUser: vi.fn(),
+    updateGroup: vi.fn(),
+    deleteGroupFn: vi.fn(),
+  }));
 vi.mock("@/lib/cinc/members", () => ({
-  members: { invite, removeUser: removeUserFn, updateGroup },
+  members: {
+    invite,
+    removeUser: removeUserFn,
+    updateGroup,
+    deleteGroup: deleteGroupFn,
+  },
 }));
 
-import { inviteUser, removeUser, saveGroup } from "./actions";
+import { inviteUser, removeUser, saveGroup, deleteGroup } from "./actions";
 
 beforeEach(() => {
   invite.mockReset();
   removeUserFn.mockReset();
   updateGroup.mockReset();
+  deleteGroupFn.mockReset();
 });
 
 test("inviteUser invites by username", async () => {
@@ -48,5 +56,18 @@ test("saveGroup saves the parsed object", async () => {
   ).resolves.toEqual({ ok: true });
   expect(updateGroup).toHaveBeenCalledWith("alice", "acme", "admins", {
     users: ["bob"],
+  });
+});
+
+test("deleteGroup removes the group by name", async () => {
+  deleteGroupFn.mockResolvedValueOnce({});
+  await expect(deleteGroup("acme", "admins")).resolves.toEqual({ ok: true });
+  expect(deleteGroupFn).toHaveBeenCalledWith("alice", "acme", "admins");
+});
+
+test("deleteGroup translates 403 into a forbidden result", async () => {
+  deleteGroupFn.mockRejectedValueOnce(new CincError(403, "denied"));
+  await expect(deleteGroup("acme", "admins")).resolves.toEqual({
+    error: "forbidden",
   });
 });

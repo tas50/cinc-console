@@ -3,7 +3,7 @@ import { members } from "@/lib/cinc/members";
 import { safeGet, explainRead } from "@/lib/cinc/safe-get";
 import { ObjectEditor } from "@/components/object-editor";
 import { GroupDetails } from "@/components/details/group-details";
-import { saveGroup } from "../../actions";
+import { saveGroup, deleteGroup } from "../../actions";
 
 export default async function GroupDetail({
   params,
@@ -25,6 +25,7 @@ export default async function GroupDetail({
       details={<GroupDetails data={res.data} />}
       backHref={base}
       onSave={saveGroup.bind(null, org, name)}
+      onDelete={deleteGroup.bind(null, org, name)}
     />
   );
 }
