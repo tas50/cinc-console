@@ -2,8 +2,10 @@
 
 /* Dark operator-console theme. The Cinc violet accent carries weight; it is
    reserved for primary actions and active/selected state. Light theme is a
-   later flip of the same tokens. */
+   later flip of the same tokens. Foreground colors are tuned to meet WCAG 2.2
+   AA contrast (>= 4.5:1 for body text) against their intended surfaces. */
 :root {
+  color-scheme: dark;
   --bg: #131318;
   --surface: #1c1b22;
   --surface-2: #232230;
@@ -11,13 +13,20 @@
   --primary: #7c27ff;
   --primary-hover: #9357ff;
   --primary-foreground: #ffffff;
-  /* The lighter of the logo's two purples — readable for text/links on dark. */
-  --link: #8040ff;
+  /* Bright enough for AA body-text contrast on both --bg (6.8:1) and
+     --surface (6.3:1); used for links and active/selected state. */
+  --link: #a78bfa;
+  /* A deeper red for solid danger buttons so white text clears AA (5.2:1);
+     --danger stays bright for error text/borders where it sits on --bg. */
+  --danger-strong: #c9343a;
   --muted: #8b8a9e;
   --text: #e9e8ef;
   --success: #3fb950;
   --warn: #d29922;
   --danger: #f85149;
+  /* Soft elevation for cards, popovers, and the sticky header. */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 16px rgb(0 0 0 / 0.35);
 }
 
 @theme inline {
@@ -29,6 +38,7 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
   --color-link: var(--link);
+  --color-danger-strong: var(--danger-strong);
   --color-muted: var(--muted);
   --color-text: var(--text);
   --color-success: var(--success);
@@ -50,6 +60,15 @@ body {
 
 a {
   color: var(--link);
+}
+
+/* Visible keyboard-focus indicator for interactive elements that don't define
+   their own ring (plain links, nav, breadcrumbs). Components that set
+   `focus-visible:outline-none` + a ring override this by specificity. */
+:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 ::selection {

@@ -112,14 +112,17 @@ export function ObjectEditor({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <Link href={backHref} className="text-sm text-muted hover:text-text">
-            ← back
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1">
+          <Link
+            href={backHref}
+            className="inline-flex items-center gap-1 text-sm text-muted hover:text-link"
+          >
+            <span aria-hidden="true">←</span> Back
           </Link>
           <div className="flex items-center gap-2">
             {titleIcon}
-            <h1 className="font-mono text-xl font-semibold">{name}</h1>
+            <h1 className="font-mono text-2xl font-semibold tracking-tight">{name}</h1>
           </div>
         </div>
         <div className="flex gap-2">
