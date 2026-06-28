@@ -35,7 +35,12 @@ export default async function EnvironmentDetail({
     <ObjectEditor
       name={name}
       initialJson={JSON.stringify(res.data, null, 2)}
-      details={<EnvironmentDetails data={res.data} />}
+      details={
+        <EnvironmentDetails
+          data={res.data}
+          onSaveOverview={saveEnvironment.bind(null, org, name)}
+        />
+      }
       backHref={base}
       onSave={saveEnvironment.bind(null, org, name)}
       onDelete={deleteEnvironment.bind(null, org, name)}

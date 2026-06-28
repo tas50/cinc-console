@@ -28,6 +28,7 @@ export default async function RoleDetail({
         <RoleDetails
           data={res.data}
           onSaveRunList={saveRole.bind(null, org, name)}
+          onSaveOverview={saveRole.bind(null, org, name)}
         />
       }
       backHref={base}
