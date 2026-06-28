@@ -164,15 +164,21 @@ export function CookbookConstraintsEditor({
             const errorId = `version-error-${r.id}`;
             return (
               <li key={r.id} className="space-y-1">
+                {/* The Input/select fill width-sized wrappers; the project's
+                    `cn` doesn't merge Tailwind classes, so a fixed `w-*` on the
+                    input would lose to its base `w-full`. Sizing the wrapper
+                    sidesteps that conflict. */}
                 <div className="flex items-center gap-2">
-                  <Input
-                    aria-label="Cookbook"
-                    placeholder="cookbook"
-                    value={r.cookbook}
-                    onChange={(e) => update(r.id, { cookbook: e.target.value })}
-                    disabled={pending}
-                    className="min-w-0 flex-1 font-mono text-xs"
-                  />
+                  <div className="min-w-0 flex-1">
+                    <Input
+                      aria-label="Cookbook"
+                      placeholder="cookbook"
+                      value={r.cookbook}
+                      onChange={(e) => update(r.id, { cookbook: e.target.value })}
+                      disabled={pending}
+                      className="font-mono text-xs"
+                    />
+                  </div>
                   <select
                     aria-label="Operator"
                     value={r.op}
@@ -186,19 +192,21 @@ export function CookbookConstraintsEditor({
                       </option>
                     ))}
                   </select>
-                  <Input
-                    aria-label="Version"
-                    placeholder="1.0.0"
-                    value={r.version}
-                    onChange={(e) => update(r.id, { version: e.target.value })}
-                    disabled={pending}
-                    aria-invalid={badVersion ? true : undefined}
-                    aria-describedby={badVersion ? errorId : undefined}
-                    className={cn(
-                      "w-28 shrink-0 font-mono text-xs",
-                      badVersion && "border-danger focus-visible:ring-danger",
-                    )}
-                  />
+                  <div className="w-24 shrink-0">
+                    <Input
+                      aria-label="Version"
+                      placeholder="1.0.0"
+                      value={r.version}
+                      onChange={(e) => update(r.id, { version: e.target.value })}
+                      disabled={pending}
+                      aria-invalid={badVersion ? true : undefined}
+                      aria-describedby={badVersion ? errorId : undefined}
+                      className={cn(
+                        "font-mono text-xs",
+                        badVersion && "border-danger focus-visible:ring-danger",
+                      )}
+                    />
+                  </div>
                   <Button
                     variant="ghost"
                     className="shrink-0 px-2 text-danger hover:text-danger"
