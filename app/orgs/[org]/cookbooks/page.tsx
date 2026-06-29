@@ -1,7 +1,7 @@
 import { currentUser } from "@/lib/guard";
-import { cookbooks } from "@/lib/cinc/readonly";
+import { listCookbooks } from "@/lib/cinc/cookbooks";
 import { safeGet, explainRead } from "@/lib/cinc/safe-get";
-import { ResourceTable } from "@/components/resource-table";
+import { CookbooksTable } from "@/components/cookbooks-table";
 
 export default async function CookbooksPage({
   params,
@@ -10,15 +10,11 @@ export default async function CookbooksPage({
 }) {
   const { org } = await params;
   const user = await currentUser();
-  const res = await safeGet(() => cookbooks.list(user, org));
+  const res = await safeGet(() => listCookbooks(user, org));
   if ("error" in res) {
     return <p className="text-sm text-danger">{explainRead(res.error)}</p>;
   }
   return (
-    <ResourceTable
-      title="Cookbooks"
-      names={Object.keys(res.data)}
-      basePath={`/orgs/${org}/cookbooks`}
-    />
+    <CookbooksTable basePath={`/orgs/${org}/cookbooks`} cookbooks={res.data} />
   );
 }
