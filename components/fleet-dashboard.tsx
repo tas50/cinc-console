@@ -75,8 +75,10 @@ export function FleetDashboard({
     }
 
     // SSR gave us the first snapshot; only fetch immediately if it failed.
-    if (!initial) poll();
-    const id = setInterval(poll, POLL_MS);
+    // `poll` is async; wrap so its promise is explicitly fire-and-forget (and
+    // we never hand setInterval a bare identifier).
+    if (!initial) void poll();
+    const id = setInterval(() => void poll(), POLL_MS);
     return () => {
       active = false;
       clearInterval(id);

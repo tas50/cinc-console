@@ -28,6 +28,13 @@ function platformText(auto: Record<string, unknown>): string | null {
   return null;
 }
 
+/** The reported client version (`automatic.chef_packages.chef.version`). */
+function clientVersion(auto: Record<string, unknown>): unknown {
+  const pkgs = isRecord(auto.chef_packages) ? auto.chef_packages : {};
+  const chef = isRecord(pkgs.chef) ? pkgs.chef : {};
+  return chef.version;
+}
+
 /**
  * Curated read-only view of a Cinc node: a summary pulled from `automatic`,
  * the run list and tags, then each attribute precedence level as a tree.
@@ -57,6 +64,9 @@ export function NodeDetails({
           </Field>
           <Field label="Platform">
             <ScalarValue value={platformText(automatic)} />
+          </Field>
+          <Field label="Client version">
+            <ScalarValue value={clientVersion(automatic)} />
           </Field>
           <Field label="FQDN">
             <ScalarValue value={automatic.fqdn} />
