@@ -22,6 +22,10 @@
 
 # misc
 .DS_Store
+# editor swap files (vim)
+*.swp
+*.swo
+*~
 *.pem
 # ...except the public signing-conformance test vector (from cinc-api/testdata).
 !lib/cinc/__fixtures__/test_key.pem
