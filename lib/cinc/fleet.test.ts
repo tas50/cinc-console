@@ -171,4 +171,33 @@ describe("buildSnapshot", () => {
     expect(fresh.status).toBe("missing"); // missing wins over unconfigured
     expect(fresh.clientStatus).toBe("unknown");
   });
+
+  it("carries independent diagnostic flags so a tile filter matches its count", () => {
+    // A never-converged node is BOTH missing and unconfigured. The badge is
+    // single-valued (missing wins), but the per-node flags must mirror the stat
+    // tiles exactly, or the unconfigured filter selects nothing the tile counted.
+    const fresh = node({
+      name: "fresh",
+      ohaiTime: null, // missing (never seen)
+      runList: [], // unconfigured
+      policyName: null,
+    });
+
+    const snap = buildSnapshot([fresh], NOW, LIFECYCLE);
+    const row = snap.nodes[0];
+
+    expect(snap.stats.missing).toBe(1);
+    expect(snap.stats.unconfigured).toBe(1);
+    // The row badge collapses to one status, but both flags are set, so a
+    // filter on either flag selects exactly the node its tile counted.
+    expect(row.status).toBe("missing");
+    expect(row.missing).toBe(true);
+    expect(row.unconfigured).toBe(true);
+    expect(snap.nodes.filter((n) => n.unconfigured)).toHaveLength(
+      snap.stats.unconfigured,
+    );
+    expect(snap.nodes.filter((n) => n.missing)).toHaveLength(
+      snap.stats.missing,
+    );
+  });
 });

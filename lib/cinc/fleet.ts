@@ -45,6 +45,14 @@ export type ClientLifecycle = {
 export type NodeSummary = {
   name: string;
   status: NodeStatus;
+  /**
+   * Independent diagnostic flags mirroring the stat tiles. `status` collapses to
+   * one badge by priority (missing wins), but a node can be counted by more than
+   * one tile — so tile filtering keys off these flags, not the single-valued
+   * badge, to select exactly the nodes the tile counted.
+   */
+  missing: boolean;
+  unconfigured: boolean;
   lastCheckIn: number | null;
   chefVersion: string | null;
   clientStatus: ClientStatus;
@@ -221,6 +229,8 @@ export function buildSnapshot(
     .map((n) => ({
       name: n.name,
       status: primaryStatus(n, nowMs),
+      missing: isMissing(n, nowMs),
+      unconfigured: isUnconfigured(n),
       lastCheckIn: n.ohaiTime,
       chefVersion: n.chefVersion,
       clientStatus: statusOf(n),
