@@ -5,6 +5,13 @@ import Link from "next/link";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { PageHeader } from "./ui/page-header";
+import { SortToggle } from "./ui/sortable";
+import { useSort } from "./ui/use-sort";
+import { applyDir, byString, type SortState } from "@/lib/sort";
+
+/** Single-column lists sort by name only; direction is the user's to choose. */
+const SORT_KEYS = ["name"] as const;
+const DEFAULT_SORT: SortState = { key: "name", dir: "asc" };
 
 /** Rows rendered per page. The Cinc list call returns every name at once, so
  * this only bounds the DOM — it keeps large orgs (thousands of nodes) snappy. */
@@ -27,10 +34,13 @@ export function ResourceTable({
 }) {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(0);
+  const { sort, setSort } = useSort("sort", DEFAULT_SORT, SORT_KEYS);
   const filtered = useMemo(() => {
     const needle = q.toLowerCase();
-    return names.filter((n) => n.toLowerCase().includes(needle)).sort();
-  }, [names, q]);
+    return names
+      .filter((n) => n.toLowerCase().includes(needle))
+      .sort((a, b) => applyDir(byString(a, b), sort.dir));
+  }, [names, q, sort.dir]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   // Clamp during render so a shrinking filter can never strand us past the end.
@@ -56,12 +66,15 @@ export function ResourceTable({
         }
       />
 
-      <Input
-        placeholder={`Filter ${title.toLowerCase()}…`}
-        value={q}
-        onChange={(e) => onFilter(e.target.value)}
-        className="max-w-xs"
-      />
+      <div className="flex items-center gap-2">
+        <Input
+          placeholder={`Filter ${title.toLowerCase()}…`}
+          value={q}
+          onChange={(e) => onFilter(e.target.value)}
+          className="max-w-xs"
+        />
+        <SortToggle label="Name" sort={sort} onSort={setSort} />
+      </div>
 
       <div className="overflow-hidden rounded-lg border border-border">
         {names.length === 0 ? (
