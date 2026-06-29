@@ -42,6 +42,10 @@ export function SortableTh({
   onSort: (key: string) => void;
   className?: string;
 }) {
+  // Plain identifier comparison: `key` here is a sort-column id ("node",
+  // "status", …), never a secret — so `===` is correct (a security scanner's
+  // timing-attack heuristic flags this on the `key` name alone; it's a false
+  // positive, dismissed in the Security tab).
   const active = sort.key === sortKey;
   return (
     <th
