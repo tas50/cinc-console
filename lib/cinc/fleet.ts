@@ -143,24 +143,33 @@ export function majorOf(version: string): number | null {
 }
 
 /**
- * Classify a node's client version against the lifecycle. EOL takes precedence
+ * Classify a single client version against the lifecycle. EOL takes precedence
  * over major-behind (an EOL client is also behind, but EOL is the headline). The
  * "latest major" bar comes from the lifecycle source; when that's unavailable
- * (endoflife.date unreachable) we fall back to the fleet's own newest major so
+ * (endoflife.date unreachable) we fall back to the supplied major so
  * "major behind" still works relative to what's deployed — only EOL goes dark.
  */
-export function clientStatus(
-  node: FleetNode,
+export function versionStatus(
+  version: string | null,
   lifecycle: ClientLifecycle,
   fallbackLatestMajor: number | null,
 ): ClientStatus {
-  if (node.chefVersion === null) return "unknown";
-  const major = majorOf(node.chefVersion);
+  if (version === null) return "unknown";
+  const major = majorOf(version);
   if (major === null) return "unknown";
   if (lifecycle.eolMajors.includes(major)) return "eol";
   const latest = lifecycle.latestMajor ?? fallbackLatestMajor;
   if (latest !== null && latest - major >= 1) return "major-behind";
   return "current";
+}
+
+/** Classify a fleet node's client version (see versionStatus). */
+export function clientStatus(
+  node: FleetNode,
+  lifecycle: ClientLifecycle,
+  fallbackLatestMajor: number | null,
+): ClientStatus {
+  return versionStatus(node.chefVersion, lifecycle, fallbackLatestMajor);
 }
 
 /** Primary badge for a node: missing wins over unconfigured wins over ok. */

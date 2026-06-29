@@ -48,6 +48,24 @@ describe("NodeDetails", () => {
     expect(() => render(<NodeDetails data={"oops"} />)).not.toThrow();
     expect(screen.getByText("No run list.")).toBeInTheDocument();
   });
+
+  it("warns next to the version when the client is a major release behind", () => {
+    render(<NodeDetails data={node} clientStatus="major-behind" />);
+    expect(screen.getByText("major release behind")).toBeInTheDocument();
+    expect(screen.queryByText("EOL")).not.toBeInTheDocument();
+  });
+
+  it("warns next to the version when the client is EOL", () => {
+    render(<NodeDetails data={node} clientStatus="eol" />);
+    expect(screen.getByLabelText("End-of-life release")).toBeInTheDocument();
+    expect(screen.getByText("EOL")).toBeInTheDocument();
+  });
+
+  it("shows no version warning for a current client", () => {
+    render(<NodeDetails data={node} clientStatus="current" />);
+    expect(screen.queryByText("EOL")).not.toBeInTheDocument();
+    expect(screen.queryByText("major release behind")).not.toBeInTheDocument();
+  });
 });
 
 describe("RoleDetails", () => {
