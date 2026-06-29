@@ -56,7 +56,7 @@ describe("ResourceTable sorting", () => {
   it("writes the flipped direction to the URL when toggled from the default", async () => {
     const user = userEvent.setup();
     render(<ResourceTable title="Nodes" names={["a", "b"]} basePath="/b" />);
-    await user.click(screen.getByRole("button", { name: /sort by name/i }));
+    await user.click(screen.getByRole("button", { name: "Name" }));
     expect(nav.replace).toHaveBeenCalledWith(
       "/orgs/acme/nodes?sort=name.desc",
       { scroll: false },
@@ -67,7 +67,7 @@ describe("ResourceTable sorting", () => {
     nav.setSearch("sort=name.desc");
     const user = userEvent.setup();
     render(<ResourceTable title="Nodes" names={["a", "b"]} basePath="/b" />);
-    await user.click(screen.getByRole("button", { name: /sort by name/i }));
+    await user.click(screen.getByRole("button", { name: "Name" }));
     // name.asc is the default, so the URL should clean up to no query string.
     expect(nav.replace).toHaveBeenCalledWith("/orgs/acme/nodes", {
       scroll: false,

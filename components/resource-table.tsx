@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { PageHeader } from "./ui/page-header";
-import { SortToggle } from "./ui/sortable";
+import { SortableTh } from "./ui/sortable";
 import { useSort } from "./ui/use-sort";
 import { applyDir, byString, type SortState } from "@/lib/sort";
 
@@ -66,15 +66,12 @@ export function ResourceTable({
         }
       />
 
-      <div className="flex items-center gap-2">
-        <Input
-          placeholder={`Filter ${title.toLowerCase()}…`}
-          value={q}
-          onChange={(e) => onFilter(e.target.value)}
-          className="max-w-xs"
-        />
-        <SortToggle label="Name" sort={sort} onSort={setSort} />
-      </div>
+      <Input
+        placeholder={`Filter ${title.toLowerCase()}…`}
+        value={q}
+        onChange={(e) => onFilter(e.target.value)}
+        className="max-w-xs"
+      />
 
       <div className="overflow-hidden rounded-lg border border-border">
         {names.length === 0 ? (
@@ -95,21 +92,39 @@ export function ResourceTable({
             No {title.toLowerCase()} matching &ldquo;{q}&rdquo;.
           </p>
         ) : (
-          <ul className="divide-y divide-border">
-            {visible.map((name) => (
-              <li key={name}>
-                <Link
-                  href={`${basePath}/${encodeURIComponent(name)}`}
-                  className="flex items-center justify-between gap-2 px-4 py-2.5 font-mono text-sm text-text transition-colors hover:bg-surface-2 hover:text-link"
+          <table className="w-full text-sm">
+            <caption className="sr-only">{title}, sortable by name</caption>
+            <thead>
+              <tr className="border-b border-border text-left text-muted">
+                <SortableTh
+                  label="Name"
+                  sortKey="name"
+                  sort={sort}
+                  onSort={setSort}
+                />
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((name) => (
+                <tr
+                  key={name}
+                  className="border-b border-border last:border-0 hover:bg-surface-2"
                 >
-                  <span className="truncate">{name}</span>
-                  <span aria-hidden="true" className="text-muted">
-                    →
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                  <td className="p-0">
+                    <Link
+                      href={`${basePath}/${encodeURIComponent(name)}`}
+                      className="flex items-center justify-between gap-2 px-4 py-2.5 font-mono text-sm text-text transition-colors hover:text-link"
+                    >
+                      <span className="truncate">{name}</span>
+                      <span aria-hidden="true" className="text-muted">
+                        →
+                      </span>
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
 
