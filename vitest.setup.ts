@@ -7,3 +7,12 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
 }));
+
+// The App Router navigation hooks throw without a mounted router context. A
+// default no-op mock lets client components that read the URL (e.g. the useSort
+// hook) render under vitest; tests that assert navigation re-mock as needed.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/",
+  useSearchParams: () => new URLSearchParams(),
+}));

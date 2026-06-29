@@ -4,12 +4,22 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import type {
-  ClientStatus,
-  FleetSnapshot,
-  FleetStats,
-  NodeStatus,
-  NodeSummary,
+import { SortableTh } from "@/components/ui/sortable";
+import { useSort } from "@/components/ui/use-sort";
+import {
+  applyDir,
+  byNumber,
+  byString,
+  nullsLast,
+  type SortState,
+} from "@/lib/sort";
+import {
+  compareVersions,
+  type ClientStatus,
+  type FleetSnapshot,
+  type FleetStats,
+  type NodeStatus,
+  type NodeSummary,
 } from "@/lib/cinc/fleet";
 
 /** Which stat tile is the active filter for the node list, if any. */
@@ -18,6 +28,47 @@ type Filter = "missing" | "unconfigured" | "outdated" | null;
 const POLL_MS = 10_000;
 /** Cap the rendered list so a huge fleet can't bloat the DOM; the count note is honest about it. */
 const MAX_ROWS = 200;
+
+/** Sortable columns of the node table. */
+const SORT_KEYS = ["node", "status", "lastSeen", "client"] as const;
+/** Default order matches the server's snapshot: most recently seen first. */
+const DEFAULT_SORT: SortState = { key: "lastSeen", dir: "desc" };
+
+/**
+ * Severity order for sorting the Status column: ascending surfaces the nodes
+ * that need attention first (missing, then unconfigured, then healthy).
+ */
+const STATUS_RANK: Record<NodeStatus, number> = {
+  missing: 0,
+  unconfigured: 1,
+  ok: 2,
+};
+
+/** Order nodes by the chosen column; "never seen" / "unknown version" pin last. */
+function sortNodes(nodes: NodeSummary[], sort: SortState): NodeSummary[] {
+  const { key, dir } = sort;
+  const cmp = (a: NodeSummary, b: NodeSummary): number => {
+    switch (key) {
+      case "node":
+        return applyDir(byString(a.name, b.name), dir);
+      case "status":
+        return applyDir(byNumber(STATUS_RANK[a.status], STATUS_RANK[b.status]), dir);
+      case "lastSeen":
+        return nullsLast<number>((x, y) => applyDir(byNumber(x, y), dir))(
+          a.lastCheckIn,
+          b.lastCheckIn,
+        );
+      case "client":
+        return nullsLast<string>((x, y) => applyDir(compareVersions(x, y), dir))(
+          a.chefVersion,
+          b.chefVersion,
+        );
+      default:
+        return 0;
+    }
+  };
+  return [...nodes].sort(cmp);
+}
 
 export function FleetDashboard({
   org,
@@ -93,9 +144,10 @@ export function FleetDashboard({
     return () => clearInterval(id);
   }, []);
 
+  const { sort, setSort } = useSort("sort", DEFAULT_SORT, SORT_KEYS);
   const stats = snapshot?.stats;
   const nodes = snapshot?.nodes ?? [];
-  const shown = filterNodes(nodes, filter);
+  const shown = sortNodes(filterNodes(nodes, filter), sort);
   const capped = shown.slice(0, MAX_ROWS);
 
   const toggle = (f: Exclude<Filter, null>) =>
@@ -190,22 +242,34 @@ export function FleetDashboard({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <caption className="sr-only">
-                Fleet nodes, most recently seen first
+                Fleet nodes; use the column headers to sort
               </caption>
               <thead>
                 <tr className="border-b border-border text-left text-muted">
-                  <th scope="col" className="px-4 py-2 font-medium">
-                    Node
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-medium">
-                    Status
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-medium">
-                    Last check-in
-                  </th>
-                  <th scope="col" className="px-4 py-2 font-medium">
-                    Client
-                  </th>
+                  <SortableTh
+                    label="Node"
+                    sortKey="node"
+                    sort={sort}
+                    onSort={setSort}
+                  />
+                  <SortableTh
+                    label="Status"
+                    sortKey="status"
+                    sort={sort}
+                    onSort={setSort}
+                  />
+                  <SortableTh
+                    label="Last check-in"
+                    sortKey="lastSeen"
+                    sort={sort}
+                    onSort={setSort}
+                  />
+                  <SortableTh
+                    label="Client"
+                    sortKey="client"
+                    sort={sort}
+                    onSort={setSort}
+                  />
                 </tr>
               </thead>
               <tbody>
