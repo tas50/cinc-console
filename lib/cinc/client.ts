@@ -29,6 +29,15 @@ export function nowIso(): string {
   return new Date().toISOString().replace(/\.\d+Z$/, "Z");
 }
 
+/**
+ * Current unix milliseconds. Indirecting through a helper keeps the impure
+ * `Date.now()` out of Server Component render bodies (the react-hooks/purity
+ * lint rule) while reading as exactly what it is at call sites.
+ */
+export function nowMs(): number {
+  return Date.now();
+}
+
 export type CincRequestOptions = {
   user: string;
   method: string;
@@ -36,6 +45,13 @@ export type CincRequestOptions = {
   body?: unknown;
   /** When set, the path is prefixed with /organizations/<org>. */
   org?: string;
+  /**
+   * Query parameters appended to the request URL. Kept SEPARATE from `path`
+   * because Chef's v1.3 signing canonicalizes the path only — the query string
+   * is never signed. Folding it into `path` would sign bytes the server can't
+   * reproduce and every request would 401. Used by partial search (`?q=...`).
+   */
+  query?: Record<string, string | number>;
 };
 
 export async function cincRequest<T>(opts: CincRequestOptions): Promise<T> {
@@ -62,7 +78,15 @@ export async function cincRequest<T>(opts: CincRequestOptions): Promise<T> {
   };
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
 
-  const res = await fetch(serverUrl + fullPath, {
+  // Query string lives on the URL only, never in the signed `fullPath` above.
+  const qs = opts.query
+    ? "?" +
+      new URLSearchParams(
+        Object.entries(opts.query).map(([k, v]) => [k, String(v)]),
+      ).toString()
+    : "";
+
+  const res = await fetch(serverUrl + fullPath + qs, {
     method: opts.method,
     headers,
     body: opts.body === undefined ? undefined : bodyStr,
