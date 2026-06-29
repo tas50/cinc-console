@@ -14,13 +14,19 @@ describe("NodeDetails", () => {
     chef_environment: "production",
     run_list: ["recipe[apache2::default]", "role[web]"],
     normal: { tags: ["frontend"], foo: "bar" },
-    automatic: { platform: "ubuntu", platform_version: "22.04", fqdn: "web01" },
+    automatic: {
+      platform: "ubuntu",
+      platform_version: "22.04",
+      fqdn: "web01",
+      chef_packages: { chef: { version: "18.4.12" } },
+    },
   };
 
-  it("renders the environment, platform, run list and tags", () => {
+  it("renders the environment, platform, client version, run list and tags", () => {
     render(<NodeDetails data={node} />);
     expect(screen.getByText("production")).toBeInTheDocument();
     expect(screen.getByText("ubuntu 22.04")).toBeInTheDocument();
+    expect(screen.getByText("18.4.12")).toBeInTheDocument();
     expect(screen.getByText("recipe[apache2::default]")).toBeInTheDocument();
     expect(screen.getByText("role[web]")).toBeInTheDocument();
     // appears as a tag chip and again inside the normal-attributes tree
@@ -41,6 +47,24 @@ describe("NodeDetails", () => {
   it("does not throw on a malformed object", () => {
     expect(() => render(<NodeDetails data={"oops"} />)).not.toThrow();
     expect(screen.getByText("No run list.")).toBeInTheDocument();
+  });
+
+  it("warns next to the version when the client is a major release behind", () => {
+    render(<NodeDetails data={node} clientStatus="major-behind" />);
+    expect(screen.getByText("major release behind")).toBeInTheDocument();
+    expect(screen.queryByText("EOL")).not.toBeInTheDocument();
+  });
+
+  it("warns next to the version when the client is EOL", () => {
+    render(<NodeDetails data={node} clientStatus="eol" />);
+    expect(screen.getByLabelText("End-of-life release")).toBeInTheDocument();
+    expect(screen.getByText("EOL")).toBeInTheDocument();
+  });
+
+  it("shows no version warning for a current client", () => {
+    render(<NodeDetails data={node} clientStatus="current" />);
+    expect(screen.queryByText("EOL")).not.toBeInTheDocument();
+    expect(screen.queryByText("major release behind")).not.toBeInTheDocument();
   });
 });
 
