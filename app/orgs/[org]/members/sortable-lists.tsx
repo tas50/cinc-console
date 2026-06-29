@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { RemoveUserButton } from "./remove-user-button";
-import { SortToggle } from "@/components/ui/sortable";
+import { SortableTh } from "@/components/ui/sortable";
 import { useSort } from "@/components/ui/use-sort";
 import { applyDir, byString, type SortState } from "@/lib/sort";
 import type { ActionResult } from "@/lib/cinc/action";
@@ -21,21 +21,35 @@ export function UsersList({ items }: { items: UserItem[] }) {
     applyDir(byString(a.name, b.name), sort.dir),
   );
   return (
-    <div className="space-y-2">
-      <SortToggle label="Username" sort={sort} onSort={setSort} />
-      <div className="overflow-hidden rounded-lg border border-border">
-        <ul className="divide-y divide-border">
+    <div className="overflow-hidden rounded-lg border border-border">
+      <table className="w-full text-sm">
+        <caption className="sr-only">Users, sortable by username</caption>
+        <thead>
+          <tr className="border-b border-border text-left text-muted">
+            <SortableTh
+              label="Username"
+              sortKey="name"
+              sort={sort}
+              onSort={setSort}
+            />
+            <th scope="col" className="px-4 py-2 text-right font-medium">
+              <span className="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
           {sorted.map((u) => (
-            <li
-              key={u.name}
-              className="flex items-center justify-between px-4 py-2"
-            >
-              <span className="font-mono text-sm text-text">{u.name}</span>
-              <RemoveUserButton username={u.name} onRemove={u.onRemove} />
-            </li>
+            <tr key={u.name} className="border-b border-border last:border-0">
+              <td className="px-4 py-2 font-mono text-text">{u.name}</td>
+              <td className="px-4 py-2">
+                <div className="flex justify-end">
+                  <RemoveUserButton username={u.name} onRemove={u.onRemove} />
+                </div>
+              </td>
+            </tr>
           ))}
-        </ul>
-      </div>
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -50,22 +64,37 @@ export function GroupsList({
   const { sort, setSort } = useSort("groups", DEFAULT_SORT, KEYS);
   const sorted = [...names].sort((a, b) => applyDir(byString(a, b), sort.dir));
   return (
-    <div className="space-y-2">
-      <SortToggle label="Name" sort={sort} onSort={setSort} />
-      <div className="overflow-hidden rounded-lg border border-border">
-        <ul className="divide-y divide-border">
+    <div className="overflow-hidden rounded-lg border border-border">
+      <table className="w-full text-sm">
+        <caption className="sr-only">Groups, sortable by name</caption>
+        <thead>
+          <tr className="border-b border-border text-left text-muted">
+            <SortableTh
+              label="Name"
+              sortKey="name"
+              sort={sort}
+              onSort={setSort}
+            />
+          </tr>
+        </thead>
+        <tbody>
           {sorted.map((name) => (
-            <li key={name}>
-              <Link
-                href={`${basePath}/groups/${encodeURIComponent(name)}`}
-                className="block px-4 py-2 font-mono text-sm text-text hover:bg-surface-2"
-              >
-                {name}
-              </Link>
-            </li>
+            <tr
+              key={name}
+              className="border-b border-border last:border-0 hover:bg-surface-2"
+            >
+              <td className="p-0">
+                <Link
+                  href={`${basePath}/groups/${encodeURIComponent(name)}`}
+                  className="block px-4 py-2 font-mono text-sm text-text transition-colors hover:text-link"
+                >
+                  {name}
+                </Link>
+              </td>
+            </tr>
           ))}
-        </ul>
-      </div>
+        </tbody>
+      </table>
     </div>
   );
 }
