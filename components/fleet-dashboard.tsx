@@ -399,14 +399,17 @@ function StatusBadge({ status }: { status: NodeStatus }) {
 
 // --- helpers -------------------------------------------------------------
 
+// Filter by the same independent diagnostics the stat tiles count — NOT the
+// single-valued `status` badge. A node that's both missing and unconfigured
+// shows a "missing" badge but is counted by the unconfigured tile, so filtering
+// on the badge would hide it and the list wouldn't match the tile's number.
 function filterNodes(nodes: NodeSummary[], filter: Filter): NodeSummary[] {
   if (filter === null) return nodes;
-  if (filter === "outdated") {
-    return nodes.filter(
-      (n) => n.clientStatus === "eol" || n.clientStatus === "major-behind",
-    );
-  }
-  return nodes.filter((n) => n.status === filter);
+  if (filter === "missing") return nodes.filter((n) => n.missing);
+  if (filter === "unconfigured") return nodes.filter((n) => n.unconfigured);
+  return nodes.filter(
+    (n) => n.clientStatus === "eol" || n.clientStatus === "major-behind",
+  );
 }
 
 function filterLabel(filter: Exclude<Filter, null>): string {
