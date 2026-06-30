@@ -12,6 +12,16 @@ import { CommandPalette } from "@/components/command-palette";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { NAV } from "@/lib/nav";
 
+/** Shared styling for a left-nav link; `active` gets the current-page treatment. */
+function navLinkClass(active: boolean): string {
+  return cn(
+    "block whitespace-nowrap rounded-md px-3 py-2 text-sm transition-colors",
+    active
+      ? "bg-primary/15 text-link font-medium"
+      : "text-muted hover:bg-surface-2 hover:text-text",
+  );
+}
+
 export function AppShell({
   org,
   orgs,
@@ -70,6 +80,18 @@ export function AppShell({
           className="shrink-0 overflow-x-auto border-b border-border bg-surface p-3 md:w-48 md:overflow-x-visible md:border-b-0 md:border-r"
         >
           <ul className="flex gap-1 md:flex-col md:space-y-1">
+            {/* Dashboard is the org root, not an object section, so it lives
+                outside NAV and matches its path exactly — every sub-page's path
+                starts with `base`, so startsWith would keep it always active. */}
+            <li key="dashboard">
+              <Link
+                href={base}
+                aria-current={pathname === base ? "page" : undefined}
+                className={navLinkClass(pathname === base)}
+              >
+                Dashboard
+              </Link>
+            </li>
             {NAV.map((item) => {
               const href = `${base}/${item.slug}`;
               const active = pathname.startsWith(href);
@@ -78,12 +100,7 @@ export function AppShell({
                   <Link
                     href={href}
                     aria-current={active ? "page" : undefined}
-                    className={cn(
-                      "block whitespace-nowrap rounded-md px-3 py-2 text-sm transition-colors",
-                      active
-                        ? "bg-primary/15 text-link font-medium"
-                        : "text-muted hover:bg-surface-2 hover:text-text",
-                    )}
+                    className={navLinkClass(active)}
                   >
                     {item.label}
                   </Link>
