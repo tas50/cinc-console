@@ -3,7 +3,7 @@ import { makeResource } from "@/lib/cinc/resource";
 import { safeGet, explainRead } from "@/lib/cinc/safe-get";
 import { ObjectEditor } from "@/components/object-editor";
 import { RoleDetails } from "@/components/details/role-details";
-import { saveRole, deleteRole } from "../actions";
+import { saveRole, deleteRole, createRole } from "../actions";
 
 const roles = makeResource("roles");
 
@@ -34,6 +34,8 @@ export default async function RoleDetail({
       backHref={base}
       onSave={saveRole.bind(null, org, name)}
       onDelete={deleteRole.bind(null, org, name)}
+      onDuplicate={createRole.bind(null, org)}
+      nameKind="role"
     />
   );
 }

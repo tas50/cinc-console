@@ -3,7 +3,11 @@ import { makeResource } from "@/lib/cinc/resource";
 import { safeGet, explainRead } from "@/lib/cinc/safe-get";
 import { ObjectEditor } from "@/components/object-editor";
 import { EnvironmentDetails } from "@/components/details/environment-details";
-import { saveEnvironment, deleteEnvironment } from "../actions";
+import {
+  saveEnvironment,
+  deleteEnvironment,
+  createEnvironment,
+} from "../actions";
 
 const environments = makeResource("environments");
 
@@ -27,6 +31,8 @@ export default async function EnvironmentDetail({
         initialJson={JSON.stringify(res.data, null, 2)}
         details={<EnvironmentDetails data={res.data} />}
         backHref={base}
+        onDuplicate={createEnvironment.bind(null, org)}
+        nameKind="environment"
         readOnly={true}
       />
     );
@@ -45,6 +51,8 @@ export default async function EnvironmentDetail({
       backHref={base}
       onSave={saveEnvironment.bind(null, org, name)}
       onDelete={deleteEnvironment.bind(null, org, name)}
+      onDuplicate={createEnvironment.bind(null, org)}
+      nameKind="environment"
     />
   );
 }

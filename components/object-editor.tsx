@@ -6,9 +6,11 @@ import Link from "next/link";
 import { JsonEditor } from "./json-editor";
 import { Button } from "./ui/button";
 import { ConfirmDialog } from "./ui/confirm-dialog";
+import { PromptDialog } from "./ui/prompt-dialog";
 import { JsonDiffView } from "./json-diff-view";
 import { diffJson } from "@/lib/json-diff";
 import type { ActionResult } from "@/lib/cinc/action";
+import type { NameKind } from "@/lib/cinc/names";
 
 function explain(error: string): string {
   if (error === "forbidden")
@@ -28,6 +30,8 @@ export function ObjectEditor({
   details,
   onSave,
   onDelete,
+  onDuplicate,
+  nameKind,
   backHref,
   readOnly = false,
 }: {
@@ -43,6 +47,14 @@ export function ObjectEditor({
   details?: ReactNode;
   onSave?: (json: string) => Promise<ActionResult>;
   onDelete?: () => Promise<ActionResult>;
+  /**
+   * Create a copy under a new name. Given the new name and the saved object's
+   * JSON; the action injects the name. When set, a Duplicate button appears —
+   * even in read-only views, since duplicating is a create, not an edit.
+   */
+  onDuplicate?: (name: string, json: string) => Promise<ActionResult>;
+  /** Validates the new name in the Duplicate dialog against Chef's rules. */
+  nameKind?: NameKind;
   backHref: string;
   readOnly?: boolean;
 }) {
@@ -55,6 +67,8 @@ export function ObjectEditor({
   const [pending, startTransition] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmSave, setConfirmSave] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
+  const [dupError, setDupError] = useState<string | null>(null);
   // Show the curated view first when we have one; JSON is the escape hatch.
   const [mode, setMode] = useState<"details" | "json">(
     details ? "details" : "json",
@@ -91,6 +105,22 @@ export function ObjectEditor({
         router.refresh();
       } else {
         setStatus({ kind: "err", text: explain(res.error) });
+      }
+    });
+  }
+
+  function duplicate(newName: string) {
+    if (!onDuplicate) return;
+    setDupError(null);
+    startTransition(async () => {
+      // Copy the saved object, not any unsaved edits in the JSON editor.
+      const res = await onDuplicate(newName, initialJson);
+      if ("ok" in res) {
+        setDuplicating(false);
+        router.push(`${backHref}/${encodeURIComponent(newName)}`);
+        router.refresh();
+      } else {
+        setDupError(explain(res.error));
       }
     });
   }
@@ -132,6 +162,19 @@ export function ObjectEditor({
               onClick={() => setMode(showingJson ? "details" : "json")}
             >
               {showingJson ? "View details" : readOnly ? "View JSON" : "Edit JSON"}
+            </Button>
+          )}
+          {/* Duplicate is a create, so it's offered even in read-only views. */}
+          {onDuplicate && (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setDupError(null);
+                setDuplicating(true);
+              }}
+              disabled={pending}
+            >
+              Duplicate
             </Button>
           )}
           {/* Delete is allowed even in read-only views — you can't edit the
@@ -184,6 +227,20 @@ export function ObjectEditor({
         This permanently deletes <span className="font-mono">{name}</span> from
         the server. This cannot be undone.
       </ConfirmDialog>
+
+      {duplicating && (
+        <PromptDialog
+          open
+          title={`Duplicate ${name}`}
+          label="New name"
+          confirmLabel="Duplicate"
+          nameKind={nameKind}
+          pending={pending}
+          error={dupError}
+          onSubmit={duplicate}
+          onCancel={() => setDuplicating(false)}
+        />
+      )}
 
       <ConfirmDialog
         open={confirmSave}
