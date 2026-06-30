@@ -1,6 +1,6 @@
 // @vitest-environment node
-import { describe, it, expect } from "vitest";
-import { parseLifecycle } from "./client-lifecycle";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { getClientLifecycle, parseLifecycle } from "./client-lifecycle";
 
 // Trimmed real response from endoflife.date/api/chef-infra-client.json.
 const SAMPLE = [
@@ -37,5 +37,54 @@ describe("parseLifecycle", () => {
       NOW,
     );
     expect(lc.eolMajors).toEqual([10]);
+  });
+});
+
+describe("getClientLifecycle", () => {
+  const NOW = Date.parse("2026-06-28T00:00:00Z");
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("bounds the request with an abort signal so a stalled endpoint can't hang", async () => {
+    // The whole dashboard snapshot awaits this call; without a timeout a fetch
+    // that connects but never responds would freeze the dashboard forever.
+    let signalled = false;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((_url: string, init?: { signal?: AbortSignal }) => {
+        // The fix wires a timeout signal in; reject as `AbortSignal.timeout`
+        // would when the endpoint stalls (no need to wait the real timeout).
+        signalled = init?.signal instanceof AbortSignal;
+        return Promise.reject(new DOMException("timed out", "TimeoutError"));
+      }),
+    );
+
+    const lc = await getClientLifecycle(NOW);
+    expect(signalled).toBe(true);
+    // A timed-out fetch degrades to "unavailable" rather than throwing, so the
+    // snapshot still resolves and the fleet renders without the EOL split.
+    expect(lc).toEqual({ latestMajor: null, latestVersion: null, eolMajors: [] });
+  });
+
+  it("parses a successful response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify(SAMPLE), { status: 200 })),
+    );
+    const lc = await getClientLifecycle(NOW);
+    expect(lc.latestMajor).toBe(19);
+    expect(lc.eolMajors.sort((a, b) => a - b)).toEqual([16, 17]);
+  });
+
+  it("degrades to unavailable on a non-OK response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("nope", { status: 503 })),
+    );
+    expect(await getClientLifecycle(NOW)).toEqual({
+      latestMajor: null,
+      latestVersion: null,
+      eolMajors: [],
+    });
   });
 });
