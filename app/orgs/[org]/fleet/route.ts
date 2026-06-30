@@ -5,7 +5,8 @@ import { nowMs } from "@/lib/cinc/client";
 
 /**
  * Poll endpoint for the org dashboard. The client fetches this every 10s to
- * refresh the stat tiles and node list. Unlike a Server Component we return
+ * refresh the node list (the stat tiles re-snapshot on a slower 60s cadence,
+ * client-side, from the same response). Unlike a Server Component we return
  * JSON 401 (not a redirect to /login) so the client's fetch can react instead
  * of silently following a redirect to an HTML page.
  */

@@ -32,7 +32,14 @@ import {
 /** Which stat tile is the active filter for the node list, if any. */
 type Filter = "missing" | "unconfigured" | "outdated" | null;
 
-const POLL_MS = 10_000;
+// The node list refreshes every 10s so it stays live. The boom-stat tiles up
+// top refresh on a calmer 60s cadence — the counts move slowly and the constant
+// re-render is distracting. Both are fed by the same snapshot poll (no extra
+// fetch): every poll updates the list, and the tiles are re-snapshotted from the
+// freshest data once a minute. First paint is handled by streaming (see
+// app/orgs/[org]/page.tsx), not by polling fast.
+const LIST_POLL_MS = 10_000;
+const STATS_REFRESH_MS = 60_000;
 /** Cap the rendered list so a huge fleet can't bloat the DOM; the count note is honest about it. */
 const MAX_ROWS = 200;
 
@@ -88,6 +95,11 @@ export function FleetDashboard({
 }) {
   const router = useRouter();
   const [snapshot, setSnapshot] = useState<FleetSnapshot | null>(initial);
+  // The tiles read from their own `stats` state, refreshed on a slower cadence
+  // than the list. `latestStats` always holds the freshest poll's stats so the
+  // 60s timer can promote them without depending on a stale render closure.
+  const [stats, setStats] = useState<FleetStats | undefined>(initial?.stats);
+  const latestStats = useRef<FleetStats | undefined>(initial?.stats);
   const [error, setError] = useState<string | null>(initialError);
   const [filter, setFilter] = useState<Filter>(null);
   const [fetchedAt, setFetchedAt] = useState<number>(
@@ -97,8 +109,9 @@ export function FleetDashboard({
   const [refreshing, setRefreshing] = useState(false);
   const inFlight = useRef(false);
 
-  // Poll the fleet snapshot every POLL_MS. We keep the last good snapshot on a
-  // transient failure rather than blanking the dashboard.
+  // Poll the fleet snapshot every LIST_POLL_MS to keep the node list live. We
+  // keep the last good snapshot on a transient failure rather than blanking the
+  // dashboard.
   useEffect(() => {
     let active = true;
 
@@ -119,7 +132,12 @@ export function FleetDashboard({
           setError(explainError(String(json.error)));
         } else {
           const t = Date.now();
-          setSnapshot(json as FleetSnapshot);
+          const next = json as FleetSnapshot;
+          setSnapshot(next);
+          latestStats.current = next.stats;
+          // Seed the tiles on the first data we ever get (e.g. SSR failed and
+          // this is the recovery poll); thereafter the 60s timer owns them.
+          setStats((cur) => cur ?? next.stats);
           setError(null);
           setFetchedAt(t);
           setNow(t);
@@ -136,12 +154,21 @@ export function FleetDashboard({
     // `poll` is async; wrap so its promise is explicitly fire-and-forget (and
     // we never hand setInterval a bare identifier).
     if (!initial) void poll();
-    const id = setInterval(() => void poll(), POLL_MS);
+    const id = setInterval(() => void poll(), LIST_POLL_MS);
     return () => {
       active = false;
       clearInterval(id);
     };
   }, [org, initial, router]);
+
+  // Promote the freshest stats into the tiles once a minute, decoupled from the
+  // 10s list poll so the boom numbers don't flicker every few seconds.
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (latestStats.current) setStats(latestStats.current);
+    }, STATS_REFRESH_MS);
+    return () => clearInterval(id);
+  }, []);
 
   // Tick once a second so the "updated Ns ago" / "Xh ago" labels stay live.
   // `now` starts from the SSR snapshot time (stable, no hydration mismatch) and
@@ -152,7 +179,8 @@ export function FleetDashboard({
   }, []);
 
   const { sort, setSort } = useSort("sort", DEFAULT_SORT, SORT_KEYS);
-  const stats = snapshot?.stats;
+  // `stats` (tiles) is the slow-cadence state above; `nodes` (list) tracks the
+  // 10s snapshot directly.
   const nodes = snapshot?.nodes ?? [];
   const shown = sortNodes(filterNodes(nodes, filter), sort);
   const capped = shown.slice(0, MAX_ROWS);

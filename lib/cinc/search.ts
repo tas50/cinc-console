@@ -49,6 +49,29 @@ export async function partialSearch<T>(
   return out;
 }
 
+/**
+ * Count-only search: POST with `rows: 0` so Solr returns just the `total` for
+ * the query and retrieves no documents. This is how the dashboard's leading
+ * tiles get a fast number under load — the count is cheap even when the full
+ * field-by-field sweep (partialSearch) is slow.
+ */
+export async function searchTotal(
+  user: string,
+  org: string,
+  index: string,
+  query: string,
+): Promise<number> {
+  const res = await cincRequest<SearchResponse<unknown>>({
+    user,
+    org,
+    method: "POST",
+    path: `/search/${index}`,
+    query: { q: query, rows: 0, start: 0 },
+    body: {},
+  });
+  return res.total ?? 0;
+}
+
 /** The exact node fields the dashboard's stat logic needs. */
 const FLEET_KEYS: Record<string, string[]> = {
   name: ["name"],
