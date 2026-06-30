@@ -169,7 +169,7 @@ export function CookbookConstraintsEditor({
                     input would lose to its base `w-full`. Sizing the wrapper
                     sidesteps that conflict. */}
                 <div className="flex items-center gap-2">
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 max-w-xs">
                     <Input
                       aria-label="Cookbook"
                       placeholder="cookbook"

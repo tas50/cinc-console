@@ -1,11 +1,17 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ObjectEditor } from "./object-editor";
 
+const nav = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
+  useRouter: () => nav,
 }));
+
+beforeEach(() => {
+  nav.push.mockClear();
+  nav.refresh.mockClear();
+});
 
 describe("ObjectEditor", () => {
   const json = JSON.stringify({ run_list: ["recipe[x]"] }, null, 2);
@@ -73,5 +79,75 @@ describe("ObjectEditor", () => {
     expect(
       screen.queryByRole("button", { name: /view details|view json|edit json/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("offers Duplicate only when onDuplicate is provided", () => {
+    const { rerender } = render(
+      <ObjectEditor name="web" initialJson={json} backHref="/back" onSave={vi.fn()} />,
+    );
+    expect(
+      screen.queryByRole("button", { name: "Duplicate" }),
+    ).not.toBeInTheDocument();
+
+    rerender(
+      <ObjectEditor
+        name="web"
+        initialJson={json}
+        backHref="/back"
+        onSave={vi.fn()}
+        onDuplicate={vi.fn()}
+        nameKind="role"
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Duplicate" })).toBeInTheDocument();
+  });
+
+  it("duplicates with the new name and the source JSON, then navigates", async () => {
+    const user = userEvent.setup();
+    const onDuplicate = vi.fn().mockResolvedValue({ ok: true });
+    render(
+      <ObjectEditor
+        name="web"
+        initialJson={json}
+        backHref="/orgs/acme/roles"
+        onSave={vi.fn()}
+        onDuplicate={onDuplicate}
+        nameKind="role"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Duplicate" }));
+    const dialog = within(screen.getByRole("dialog"));
+    await user.type(dialog.getByLabelText(/name/i), "web-copy");
+    await user.click(dialog.getByRole("button", { name: "Duplicate" }));
+
+    // Copies the saved object verbatim; the action injects the new name.
+    expect(onDuplicate).toHaveBeenCalledWith("web-copy", json);
+    expect(nav.push).toHaveBeenCalledWith("/orgs/acme/roles/web-copy");
+  });
+
+  it("keeps the dialog open and shows an error when duplicate fails", async () => {
+    const user = userEvent.setup();
+    const onDuplicate = vi.fn().mockResolvedValue({ error: "name already exists" });
+    render(
+      <ObjectEditor
+        name="web"
+        initialJson={json}
+        backHref="/orgs/acme/roles"
+        onDuplicate={onDuplicate}
+        nameKind="role"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Duplicate" }));
+    const dialog = within(screen.getByRole("dialog"));
+    await user.type(dialog.getByLabelText(/name/i), "web-copy");
+    await user.click(dialog.getByRole("button", { name: "Duplicate" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "name already exists",
+    );
+    expect(nav.push).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 });
