@@ -1,4 +1,4 @@
-import { NewObjectForm } from "@/components/new-object-form";
+import { CreateObjectForm } from "@/components/create-object-form";
 import { createRole } from "../actions";
 
 export default async function NewRole({
@@ -8,26 +8,11 @@ export default async function NewRole({
 }) {
   const { org } = await params;
   const base = `/orgs/${org}/roles`;
-  const initialJson = JSON.stringify(
-    {
-      name: "",
-      description: "",
-      json_class: "Chef::Role",
-      chef_type: "role",
-      default_attributes: {},
-      override_attributes: {},
-      run_list: [],
-    },
-    null,
-    2,
-  );
   return (
-    <NewObjectForm
-      title="New role"
+    <CreateObjectForm
+      kind="role"
       backHref={base}
       onCreate={createRole.bind(null, org)}
-      initialJson={initialJson}
-      nameKind="role"
     />
   );
 }
