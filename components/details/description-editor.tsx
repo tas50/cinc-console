@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { DetailSection, FieldGrid, Field, ScalarValue } from "./primitives";
+import { DescriptionField } from "./description-field";
 import type { ActionResult } from "@/lib/cinc/action";
 
 function PencilIcon() {
@@ -100,19 +101,7 @@ export function DescriptionEditor({
 
   return (
     <DetailSection title="Overview">
-      <div className="space-y-1">
-        <label htmlFor="description" className="text-sm text-muted">
-          Description
-        </label>
-        <textarea
-          id="description"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          rows={2}
-          disabled={pending}
-          className="w-full rounded-md border border-border bg-bg p-2 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        />
-      </div>
+      <DescriptionField value={value} onChange={setValue} disabled={pending} />
       {status?.kind === "err" && (
         <p role="alert" className="text-sm text-danger">
           {status.text}
