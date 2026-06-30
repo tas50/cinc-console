@@ -15,12 +15,19 @@ import {
 } from "@/lib/sort";
 import {
   compareVersions,
-  type ClientStatus,
   type FleetSnapshot,
   type FleetStats,
   type NodeStatus,
   type NodeSummary,
 } from "@/lib/cinc/fleet";
+import { relativeAgo } from "@/lib/time";
+import { ClientVersion } from "@/components/client-chip";
+import {
+  IconArrowDown,
+  IconCheck,
+  IconQuestion,
+  IconWarning,
+} from "@/components/ui/icons";
 
 /** Which stat tile is the active filter for the node list, if any. */
 type Filter = "missing" | "unconfigured" | "outdated" | null;
@@ -320,8 +327,7 @@ function NodeRow({
           : relativeAgo(now - node.lastCheckIn * 1000)}
       </td>
       <td className="px-4 py-2 text-muted">
-        {node.chefVersion ?? "—"}
-        <ClientChip status={node.clientStatus} />
+        <ClientVersion version={node.chefVersion} status={node.clientStatus} />
       </td>
     </tr>
   );
@@ -418,27 +424,6 @@ function OutdatedHelp({ stats }: { stats?: FleetStats }) {
   );
 }
 
-/** Per-node client-version chip: only EOL and major-behind warrant a flag. */
-function ClientChip({ status }: { status: ClientStatus }) {
-  if (status === "eol") {
-    return (
-      <span className="ml-2 inline-flex items-center gap-1 rounded border border-danger px-1.5 py-0.5 text-xs text-danger">
-        <IconWarning />
-        EOL
-      </span>
-    );
-  }
-  if (status === "major-behind") {
-    return (
-      <span className="ml-2 inline-flex items-center gap-1 rounded border border-border px-1.5 py-0.5 text-xs text-warn">
-        <IconArrowDown />
-        major release behind
-      </span>
-    );
-  }
-  return null;
-}
-
 function StatusBadge({ status }: { status: NodeStatus }) {
   const map: Record<
     NodeStatus,
@@ -489,49 +474,3 @@ function explainError(error: string): string {
   return "The Cinc server returned an error refreshing the fleet.";
 }
 
-/** "5s ago" / "3m ago" / "2h ago" / "4d ago" from a millisecond delta. */
-function relativeAgo(deltaMs: number): string {
-  const s = Math.max(0, Math.floor(deltaMs / 1000));
-  if (s < 5) return "just now";
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-}
-
-// --- icons (decorative; status is always carried by adjacent text) -------
-
-function IconWarning() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-      <path d="M8 1.5 15 14H1L8 1.5Zm0 4.5v3.5M8 11.5v.01" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconQuestion() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3">
-      <circle cx="8" cy="8" r="6.5" strokeDasharray="2.5 2" />
-      <path d="M6.2 6.2a1.8 1.8 0 1 1 2.6 1.6c-.6.3-.8.6-.8 1.2M8 11.5v.01" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconArrowDown() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M8 3v10M4 9l4 4 4-4" />
-    </svg>
-  );
-}
-
-function IconCheck() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 8.5 6.5 12 13 4.5" />
-    </svg>
-  );
-}
