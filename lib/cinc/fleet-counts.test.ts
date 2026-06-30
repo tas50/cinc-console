@@ -29,7 +29,7 @@ test("derives missing and unconfigured from cheap totals", async () => {
     "alice",
     "acme",
     "node",
-    `ohai_time:{${cutoff} TO *]`,
+    `ohai_time:{${cutoff} TO *}`,
   );
   expect(searchTotal).toHaveBeenCalledWith(
     "alice",

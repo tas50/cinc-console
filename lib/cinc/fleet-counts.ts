@@ -43,8 +43,10 @@ export async function fetchFleetCounts(
     const [total, recent, configured] = await Promise.all([
       searchTotal(user, org, "node", "*:*"),
       // Strict lower bound ({) so "exactly at the cutoff" counts as missing,
-      // matching isMissing's `> threshold`.
-      searchTotal(user, org, "node", `ohai_time:{${cutoff} TO *]`),
+      // matching isMissing's `> threshold`. Keep both brackets matched ({…})
+      // — real Cinc/Solr tolerates a mixed `{… ]`, but a leaner server (e.g.
+      // cinc-zero) rejects it as an "unterminated range".
+      searchTotal(user, org, "node", `ohai_time:{${cutoff} TO *}`),
       searchTotal(user, org, "node", `run_list:[* TO *] OR policy_name:[* TO *]`),
     ]);
     return {
