@@ -46,7 +46,7 @@ export function SortableTh({
   // "status", …), never a secret — so `===` is correct (a security scanner's
   // timing-attack heuristic flags this on the `key` name alone; it's a false
   // positive, dismissed in the Security tab).
-  const active = sort.key === sortKey;
+  const active = sort.key === sortKey; // nosemgrep: js-timing-attack-string-comparison
   return (
     <th
       scope="col"
