@@ -37,7 +37,10 @@ export function ClientDetails({ data }: { data: unknown }) {
       </DetailSection>
 
       <DetailSection title="Public key">
-        {typeof publicKey === "string" && publicKey !== "" ? (
+        {/* `publicKey` is a client's PUBLIC key shown in the UI, not a secret;
+            `!== ""` is a presence check, not a credential comparison. The
+            timing-attack rule misfires on the `publicKey` name alone. */}
+        {typeof publicKey === "string" && publicKey !== "" ? ( // nosemgrep: js-timing-attack-string-comparison
           <pre className="overflow-x-auto rounded bg-bg p-3 font-mono text-xs text-muted">
             {publicKey}
           </pre>

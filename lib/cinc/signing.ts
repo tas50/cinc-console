@@ -75,7 +75,10 @@ export function signHeaders(
     "X-Ops-Server-API-Version": SERVER_API_VERSION,
   };
   chunk60(sig).forEach((c, i) => {
-    h[`X-Ops-Authorization-${i + 1}`] = c;
+    // `i` is a numeric array index, so the key is always the fixed literal
+    // `X-Ops-Authorization-<n>` — no user-controlled string reaches it, so
+    // prototype-pollution / property-injection is not possible here.
+    h[`X-Ops-Authorization-${i + 1}`] = c; // nosemgrep: javascript-remote-property-injection
   });
   return h;
 }
